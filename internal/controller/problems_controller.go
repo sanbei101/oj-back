@@ -21,7 +21,20 @@ func GetAllProblems(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }
+func GetAllProblemsExceptDesc(c *fiber.Ctx) error {
+	problems, err := service.GetAllProblemsExceptDesc()
+	if err != nil {
+		utils.HandleError(c, err, "获取题目列表失败")
+	}
 
+	response := utils.Response{
+		Success: true,
+		Message: "获取题目列表成功",
+		Data:    problems,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}
 func GetProblemByID(c *fiber.Ctx) error {
 	id := c.QueryInt("id")
 	problem, err := service.GetProblemByID(id)

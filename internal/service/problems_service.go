@@ -16,6 +16,17 @@ func GetAllProblems() ([]models.Problems, error) {
 	return problems, nil
 }
 
+func GetAllProblemsExceptDesc() ([]models.Problems, error) {
+	var problems []models.Problems
+
+	err := db.DB.Select("id", "name", "tags").Find(&problems).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return problems, nil
+}
+
 func GetProblemByID(id int) (*models.Problems, error) {
 	var problem models.Problems
 
