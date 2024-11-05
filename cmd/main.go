@@ -16,6 +16,7 @@ func main() {
 		return c.SendString("Hello, World!")
 	})
 	app.Post("/judge", controller.JudgeCode)
-
+	app.Get("/problems", controller.GetAllProblems)
+	app.Get("/problem", controller.GetProblemByID)
 	app.Listen("0.0.0.0:3000")
 }
