@@ -14,6 +14,5 @@ FROM alpine:latest AS runner
 WORKDIR /app
 
 COPY --from=backend-builder /app/main .
-COPY --from=frontend-builder /app/pocketbase-vue/dist ./dist
 
 CMD ["./main"]
