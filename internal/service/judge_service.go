@@ -1,39 +1,46 @@
 package service
 
-import (
-	"oj-back/pkg/utils"
+import "oj-back/pkg/utils"
 
-	"github.com/gofiber/fiber/v2"
-)
-
-type JudgeCodeRequest struct {
-	Language  string `json:"language"`
-	ProblemID int    `json:"problem_id"`
-	Code      string `json:"code"`
+// 评测结果结构体
+type TestResult struct {
+	IsSuccess      bool   `json:"is_success"`
+	ExpectedOutput string `json:"expected_output"`
+	ActualOutput   string `json:"actual_output"`
 }
 
-func JudgeCode(c *fiber.Ctx) error {
-	var res JudgeCodeRequest
-	if err := c.BodyParser(&res); err != nil {
-		utils.HandleError(c, err, "请求格式错误")
+type EvaluationResult struct {
+	Count   int          `json:"count"`
+	Results []TestResult `json:"results"`
+}
+
+// 评测函数，循环遍历每个测试用例并进行评测
+func EvaluateProblem(language string, codeContent string, testCases []utils.TestCase) (*EvaluationResult, error) {
+	var results []TestResult
+
+	for _, testCase := range testCases {
+		// 执行用户代码并获取输出
+		output, err := utils.RunCode(language, codeContent, testCase.Input)
+		if err != nil {
+			return nil, err
+		}
+
+		// 比对输出
+		isCorrect := utils.CompareOutput(output, testCase.ExpectedOutput)
+
+		// 记录每个测试结果
+		results = append(results, TestResult{
+			IsSuccess:      isCorrect,
+			ExpectedOutput: testCase.ExpectedOutput,
+			ActualOutput:   output,
+		})
 	}
 
-	problemCases, err := utils.GetTestCases(res.ProblemID)
-	if err != nil {
-		utils.HandleError(c, err, "获取测试用例失败")
+	// 生成总的评测结果
+	evaluation := &EvaluationResult{
+		Count:   len(results),
+		Results: results,
 	}
 
-	evaluation, err := utils.EvaluateProblem(res.Language, res.Code, problemCases)
-	if err != nil {
-		utils.HandleError(c, err, "评测失败")
-	}
-
-	response := utils.Response{
-		Success: true,
-		Message: "评测完成",
-		Data:    evaluation,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response)
-
+	return evaluation, nil
 }

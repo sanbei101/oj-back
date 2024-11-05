@@ -11,6 +11,51 @@ import (
 	"strings"
 )
 
+// Question 结构体表示题目配置
+type Question struct {
+	ID          int
+	Title       string
+	Description string
+}
+
+// TestCase 结构体表示测试用例
+type TestCase struct {
+	Input          string `json:"input"`
+	ExpectedOutput string `json:"expected_output"`
+}
+
+func (t *TestCase) UnmarshalJSON(data []byte) error {
+	// 使用匿名结构体解析 ExpectedOutput 和通用的 Input 字段
+	aux := struct {
+		Input          interface{} `json:"input"`
+		ExpectedOutput string      `json:"expected_output"`
+	}{}
+
+	// 解析 JSON 数据
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// 根据 Input 的类型进行处理
+	switch v := aux.Input.(type) {
+	case string:
+		t.Input = v // 如果是字符串，直接赋值
+	case []interface{}:
+		// 将 []interface{} 转为 []string 后拼接
+		var strParts []string
+		for _, item := range v {
+			strParts = append(strParts, fmt.Sprintf("%v", item))
+		}
+		t.Input = strings.Join(strParts, " ")
+	default:
+		return fmt.Errorf("未知的 input 类型: %T", v)
+	}
+
+	// 赋值 ExpectedOutput
+	t.ExpectedOutput = aux.ExpectedOutput
+	return nil
+}
+
 // 编译并运行 C 代码字符串，并传入测试输入，返回代码的输出结果
 func RunCode(language string, codeContent string, input string) (string, error) {
 	if language != "c" {
@@ -76,35 +121,4 @@ func GetTestCases(problemID int) ([]TestCase, error) {
 	}
 
 	return testCases, nil
-}
-
-// 评测函数，循环遍历每个测试用例并进行评测
-func EvaluateProblem(language string, codeContent string, testCases []TestCase) (*EvaluationResult, error) {
-	var results []TestResult
-
-	for _, testCase := range testCases {
-		// 执行用户代码并获取输出
-		output, err := RunCode(language, codeContent, testCase.Input)
-		if err != nil {
-			return nil, err
-		}
-
-		// 比对输出
-		isCorrect := CompareOutput(output, testCase.ExpectedOutput)
-
-		// 记录每个测试结果
-		results = append(results, TestResult{
-			IsSuccess:      isCorrect,
-			ExpectedOutput: testCase.ExpectedOutput,
-			ActualOutput:   output,
-		})
-	}
-
-	// 生成总的评测结果
-	evaluation := &EvaluationResult{
-		Count:   len(results),
-		Results: results,
-	}
-
-	return evaluation, nil
 }

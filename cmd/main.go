@@ -1,8 +1,8 @@
 package main
 
 import (
+	"oj-back/internal/controller"
 	"oj-back/internal/db"
-	"oj-back/internal/service"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,7 +15,7 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
-	app.Post("/judge", service.JudgeCode)
+	app.Post("/judge", controller.JudgeCode)
 
 	app.Listen("0.0.0.0:3000")
 }
