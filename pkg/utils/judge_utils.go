@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"oj-back/internal/db"
-	"oj-back/pkg/types"
+	"oj-back/internal/db/models"
 	"os"
 	"os/exec"
 	"strings"
 )
 
 // 编译并运行 C 代码字符串，并传入测试输入，返回代码的输出结果
-func RunCode(language, codeContent, input string) (string, error) {
+func RunCode(language string, codeContent string, input string) (string, error) {
 	if language != "c" {
 		return "", fmt.Errorf("不支持的语言")
 	}
@@ -54,13 +54,13 @@ func RunCode(language, codeContent, input string) (string, error) {
 }
 
 // 比较实际输出与预期输出是否一致
-func CompareOutput(actualOutput, expectedOutput string) bool {
+func CompareOutput(actualOutput string, expectedOutput string) bool {
 	return strings.TrimSpace(actualOutput) == strings.TrimSpace(expectedOutput)
 }
 
 // 从数据库中获取测试用例
-func GetTestCases(problemID int) ([]types.TestCase, error) {
-	var record types.TestCases
+func GetTestCases(problemID int) ([]TestCase, error) {
+	var record models.TestCases
 
 	// 使用 GORM 查询
 	err := db.DB.Where("problem_id = ?", problemID).First(&record).Error
@@ -69,7 +69,7 @@ func GetTestCases(problemID int) ([]types.TestCase, error) {
 	}
 
 	// 将 JSON 字符串解析为 TestCase 切片
-	var testCases []types.TestCase
+	var testCases []TestCase
 	err = json.Unmarshal([]byte(record.Cases), &testCases)
 	if err != nil {
 		return nil, fmt.Errorf("解析测试用例 JSON 失败: %v", err)
@@ -79,8 +79,8 @@ func GetTestCases(problemID int) ([]types.TestCase, error) {
 }
 
 // 评测函数，循环遍历每个测试用例并进行评测
-func EvaluateProblem(language, codeContent string, testCases []types.TestCase) (*types.EvaluationResult, error) {
-	var results []types.TestResult
+func EvaluateProblem(language string, codeContent string, testCases []TestCase) (*EvaluationResult, error) {
+	var results []TestResult
 
 	for _, testCase := range testCases {
 		// 执行用户代码并获取输出
@@ -93,7 +93,7 @@ func EvaluateProblem(language, codeContent string, testCases []types.TestCase) (
 		isCorrect := CompareOutput(output, testCase.ExpectedOutput)
 
 		// 记录每个测试结果
-		results = append(results, types.TestResult{
+		results = append(results, TestResult{
 			IsSuccess:      isCorrect,
 			ExpectedOutput: testCase.ExpectedOutput,
 			ActualOutput:   output,
@@ -101,7 +101,7 @@ func EvaluateProblem(language, codeContent string, testCases []types.TestCase) (
 	}
 
 	// 生成总的评测结果
-	evaluation := &types.EvaluationResult{
+	evaluation := &EvaluationResult{
 		Count:   len(results),
 		Results: results,
 	}

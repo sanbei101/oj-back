@@ -1,4 +1,4 @@
-package types
+package models
 
 type TestCases struct {
 	ProblemID int    `gorm:"column:problem_id"`
