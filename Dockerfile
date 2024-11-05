@@ -13,6 +13,9 @@ FROM alpine:latest AS runner
 
 WORKDIR /app
 
+# 安装 gcc 和其他必要的构建工具
+RUN apk add --no-cache gcc
+
 COPY --from=backend-builder /app/main .
 
 CMD ["./main"]
