@@ -17,5 +17,5 @@ func main() {
 	})
 	app.Post("/judge", service.JudgeCode)
 
-	app.Listen(":3000")
+	app.Listen("0.0.0.0:3000")
 }
