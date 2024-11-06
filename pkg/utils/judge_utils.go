@@ -16,10 +16,12 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 	if language != "c" {
 		return "", fmt.Errorf("不支持的语言")
 	}
+
 	decodedCode, err := base64.StdEncoding.DecodeString(codeContent)
 	if err != nil {
 		return "", fmt.Errorf("解码代码失败: %v", err)
 	}
+
 	// 创建临时文件保存 C 代码
 	tmpFile, err := os.CreateTemp("", "user_code_*.c")
 	if err != nil {
@@ -43,13 +45,12 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 
 	// 运行编译后的可执行文件
 	cmd := exec.Command(outputFile)
-	var out bytes.Buffer
-	var stderr bytes.Buffer
+	var out, stderr bytes.Buffer
 	cmd.Stdin = strings.NewReader(input)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
+
+	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("执行代码错误: %v, %s", err, stderr.String())
 	}
 
