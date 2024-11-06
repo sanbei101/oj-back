@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"oj-back/internal/service"
+	"oj-back/app/service"
 	"oj-back/pkg/utils"
 
 	"github.com/gofiber/fiber/v2"

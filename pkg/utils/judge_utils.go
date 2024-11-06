@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"oj-back/internal/db"
-	"oj-back/internal/db/models"
+	"oj-back/app/db"
+	"oj-back/app/models"
 	"os"
 	"os/exec"
 	"strings"
@@ -105,7 +105,7 @@ func CompareOutput(actualOutput string, expectedOutput string) bool {
 
 // 从数据库中获取测试用例
 func GetTestCases(problemID int) ([]TestCase, error) {
-	var record models.TestCases
+	var record models.TestCase
 
 	// 使用 GORM 查询
 	err := db.DB.Where("problem_id = ?", problemID).First(&record).Error

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"oj-back/internal/controller"
-	"oj-back/internal/db"
+	"oj-back/app/controller"
+	"oj-back/app/db"
 
 	"github.com/gofiber/fiber/v2"
 )
