@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"oj-back/app/db"
 	"oj-back/app/models"
@@ -15,7 +16,10 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 	if language != "c" {
 		return "", fmt.Errorf("不支持的语言")
 	}
-
+	decodedCode, err := base64.StdEncoding.DecodeString(codeContent)
+	if err != nil {
+		return "", fmt.Errorf("解码代码失败: %v", err)
+	}
 	// 创建临时文件保存 C 代码
 	tmpFile, err := os.CreateTemp("", "user_code_*.c")
 	if err != nil {
@@ -24,7 +28,7 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 	defer os.Remove(tmpFile.Name())
 
 	// 将代码内容写入临时文件
-	if _, err := tmpFile.WriteString(codeContent); err != nil {
+	if _, err := tmpFile.WriteString(string(decodedCode)); err != nil {
 		return "", fmt.Errorf("写入代码到临时文件失败: %v", err)
 	}
 	tmpFile.Close()
