@@ -8,18 +8,19 @@ import (
 )
 
 func GetAllProblems(c *fiber.Ctx) error {
-	problems, err := service.GetAllProblems()
+	page := c.QueryInt("page")
+	size := c.QueryInt("size")
+	keyword := c.Query("keyword")
+	if page == 0 || size == 0 {
+		page = 1
+		size = 10
+	}
+	problems, err := service.GetAllProblems(page, size, keyword)
 	if err != nil {
 		utils.HandleError(c, err, "获取题目列表失败")
 	}
 
-	response := utils.Response{
-		Success: true,
-		Message: "获取题目列表成功",
-		Data:    problems,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(fiber.StatusOK).JSON(problems)
 }
 
 func GetProblemByID(c *fiber.Ctx) error {
@@ -28,12 +29,5 @@ func GetProblemByID(c *fiber.Ctx) error {
 	if err != nil {
 		utils.HandleError(c, err, "获取题目失败")
 	}
-
-	response := utils.Response{
-		Success: true,
-		Message: "获取题目成功",
-		Data:    problem,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(fiber.StatusOK).JSON(problem)
 }
