@@ -40,6 +40,7 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("无法创建协程池: %v", err))
 	}
+	fmt.Println("协程池初始化成功")
 }
 
 func (t *runCodeTask) run() (string, error) {

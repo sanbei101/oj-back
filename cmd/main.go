@@ -5,13 +5,14 @@ import (
 	"oj-back/app/db"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/pprof"
 )
 
 func main() {
 	// 初始化数据库
 	db.InitDB()
 	app := fiber.New()
-
+	app.Use(pprof.New())
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
 	})
