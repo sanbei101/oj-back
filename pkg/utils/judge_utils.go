@@ -11,14 +11,14 @@ import (
 	"strings"
 )
 
-// Question 结构体表示题目配置
+// 题目配置
 type Question struct {
 	ID          int
 	Title       string
 	Description string
 }
 
-// TestCase 结构体表示测试用例
+// 测试用例
 type TestCase struct {
 	Input          string `json:"input"`
 	ExpectedOutput string `json:"expected_output"`

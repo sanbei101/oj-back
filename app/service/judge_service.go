@@ -1,6 +1,9 @@
 package service
 
-import "oj-back/pkg/utils"
+import (
+	"oj-back/pkg/utils"
+	"sync"
+)
 
 // 评测结果结构体
 type TestResult struct {
@@ -17,23 +20,43 @@ type EvaluationResult struct {
 // 评测函数，循环遍历每个测试用例并进行评测
 func EvaluateProblem(language string, codeContent string, testCases []utils.TestCase) (*EvaluationResult, error) {
 	var results []TestResult
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	var firstErr error
+	var once sync.Once
 
 	for _, testCase := range testCases {
-		// 执行用户代码并获取输出
-		output, err := utils.RunCode(language, codeContent, testCase.Input)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(tc utils.TestCase) {
+			defer wg.Done()
 
-		// 比对输出
-		isCorrect := utils.CompareOutput(output, testCase.ExpectedOutput)
+			// 执行用户代码并获取输出
+			output, err := utils.RunCode(language, codeContent, tc.Input)
+			if err != nil {
+				once.Do(func() {
+					firstErr = err
+				})
+				return
+			}
 
-		// 记录每个测试结果
-		results = append(results, TestResult{
-			IsSuccess:      isCorrect,
-			ExpectedOutput: testCase.ExpectedOutput,
-			ActualOutput:   output,
-		})
+			// 比对输出
+			isCorrect := utils.CompareOutput(output, tc.ExpectedOutput)
+
+			// 记录每个测试结果
+			mu.Lock()
+			results = append(results, TestResult{
+				IsSuccess:      isCorrect,
+				ExpectedOutput: tc.ExpectedOutput,
+				ActualOutput:   output,
+			})
+			mu.Unlock()
+		}(testCase)
+	}
+
+	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
 	}
 
 	// 生成总的评测结果
