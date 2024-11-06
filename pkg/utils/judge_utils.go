@@ -10,37 +10,62 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/panjf2000/ants/v2"
 )
 
-// 编译并运行 C 代码字符串，并传入测试输入，返回代码的输出结果
-func RunCode(language string, codeContent string, input string) (string, error) {
-	if language != "c" {
+var (
+	// 设置协程池的最大容量，可以根据您的服务器性能进行调整
+	maxPoolSize = 10
+	pool        *ants.PoolWithFunc
+)
+
+type runCodeTask struct {
+	language    string
+	codeContent string
+	input       string
+	output      string
+	err         error
+	done        chan bool
+}
+
+func init() {
+	var err error
+	// 初始化一个带有返回值的协程池
+	pool, err = ants.NewPoolWithFunc(maxPoolSize, func(task interface{}) {
+		t := task.(*runCodeTask)
+		t.output, t.err = t.run()
+		t.done <- true
+	})
+	if err != nil {
+		panic(fmt.Sprintf("无法创建协程池: %v", err))
+	}
+}
+
+func (t *runCodeTask) run() (string, error) {
+	if t.language != "c" {
 		return "", fmt.Errorf("不支持的语言")
 	}
 
-	decodedCode, err := base64.StdEncoding.DecodeString(codeContent)
+	decodedCode, err := base64.StdEncoding.DecodeString(t.codeContent)
 	if err != nil {
 		return "", fmt.Errorf("解码代码失败: %v", err)
 	}
 
-	// 使用管道代替文件写入
-	r, w, err := os.Pipe()
+	// 将解码后的代码写入临时文件
+	codeFile, err := os.CreateTemp("", "user_code_*.c")
 	if err != nil {
-		return "", fmt.Errorf("创建管道失败: %v", err)
+		return "", fmt.Errorf("创建临时文件失败: %v", err)
 	}
-	defer r.Close()
+	defer os.Remove(codeFile.Name())
+	codeFile.Write(decodedCode)
+	codeFile.Close()
 
-	// 启动一个 goroutine 写入代码到管道
-	go func() {
-		defer w.Close()
-		w.Write(decodedCode)
-	}()
-
-	// 生成输出文件名并编译代码
+	// 编译代码
 	outputFile := fmt.Sprintf("./user_code_out_%d", time.Now().UnixNano())
-	cmd := exec.Command("gcc", "-x", "c", "-", "-o", outputFile)
 	defer os.Remove(outputFile)
-	cmd.Stdin = r
+
+	cmd := exec.Command("gcc", codeFile.Name(), "-o", outputFile)
 
 	// 捕获标准错误输出
 	var stderr bytes.Buffer
@@ -54,22 +79,36 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 	// 运行编译后的可执行文件
 	runCmd := exec.Command(outputFile)
 	var out, runStderr bytes.Buffer
-	runCmd.Stdin = strings.NewReader(input)
+	runCmd.Stdin = strings.NewReader(t.input)
 	runCmd.Stdout = &out
 	runCmd.Stderr = &runStderr
 
-	// 使用 goroutine 并行执行运行命令
-	runErrChan := make(chan error)
-	go func() {
-		runErrChan <- runCmd.Run()
-	}()
-
-	// 等待运行命令完成
-	if err := <-runErrChan; err != nil {
+	// 执行运行命令
+	if err := runCmd.Run(); err != nil {
 		return "", fmt.Errorf("执行代码错误: %v, %s", err, runStderr.String())
 	}
 
 	return out.String(), nil
+}
+
+func RunCode(language string, codeContent string, input string) (string, error) {
+	task := &runCodeTask{
+		language:    language,
+		codeContent: codeContent,
+		input:       input,
+		done:        make(chan bool),
+	}
+
+	// 将任务提交到协程池
+	err := pool.Invoke(task)
+	if err != nil {
+		return "", fmt.Errorf("无法提交任务到协程池: %v", err)
+	}
+
+	// 等待任务完成
+	<-task.done
+
+	return task.output, task.err
 }
 
 // 比较实际输出与预期输出是否一致
