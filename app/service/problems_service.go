@@ -3,23 +3,21 @@ package service
 import (
 	"oj-back/app/db"
 	"oj-back/app/models"
+
+	"github.com/lib/pq"
 )
 
-func GetAllProblems() ([]models.Problem, error) {
-	var problems []models.Problem
-
-	err := db.DB.Find(&problems).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return problems, nil
+type ProblemDTO struct {
+	ID          uint           `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	Tags        pq.StringArray `gorm:"type:text[];" json:"tags,omitempty"`
 }
 
-func GetAllProblemsExceptDesc() ([]models.Problem, error) {
-	var problems []models.Problem
+func GetAllProblems() ([]ProblemDTO, error) {
+	var problems []ProblemDTO
 
-	err := db.DB.Select("id", "name", "tags").Find(&problems).Error
+	err := db.DB.Model(models.Problem{}).Find(&problems).Error
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"oj-back/app/models"
 	"oj-back/pkg/utils"
 	"sync"
 )
@@ -18,7 +19,7 @@ type EvaluationResult struct {
 }
 
 // 评测函数，循环遍历每个测试用例并进行评测
-func EvaluateProblem(language string, codeContent string, testCases []utils.TestCase) (*EvaluationResult, error) {
+func EvaluateProblem(language string, codeContent string, testCases []models.Case) (*EvaluationResult, error) {
 	var results []TestResult
 	var mu sync.Mutex
 	var wg sync.WaitGroup
@@ -27,7 +28,7 @@ func EvaluateProblem(language string, codeContent string, testCases []utils.Test
 
 	for _, testCase := range testCases {
 		wg.Add(1)
-		go func(tc utils.TestCase) {
+		go func(tc models.Case) {
 			defer wg.Done()
 
 			// 执行用户代码并获取输出

@@ -19,7 +19,6 @@ func main() {
 	problemsGroup := app.Group("/problems")
 
 	problemsGroup.Get("/", controller.GetAllProblems)
-	problemsGroup.Get("/except_desc", controller.GetAllProblemsExceptDesc)
 	problemsGroup.Get("/problem", controller.GetProblemByID)
 	app.Listen("0.0.0.0:3000")
 }

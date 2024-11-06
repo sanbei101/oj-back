@@ -8,16 +8,21 @@ import (
 )
 
 type Problem struct {
-	ID          uint           `gorm:"primaryKey;autoIncrement;not null" json:"id"`
+	ID          uint           `gorm:"primaryKey;autoIncrement;" json:"id"`
 	Name        string         `gorm:"not null" json:"name"`
-	Description string         `gorm:"not null" json:"description,omitempty"`
-	Tags        pq.StringArray `gorm:"type:text[];" json:"tags,omitempty"`
-	TestCases   TestCase       `gorm:"foreignKey:ProblemID" json:"test_cases,omitempty"`
+	Description string         `gorm:"not null" json:"description"`
+	Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
+	TestCase    TestCase       `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE" json:"test_case"`
 }
 
 type TestCase struct {
-	ProblemID uint   `gorm:"primaryKey;not null;unique;" json:"problem_id"`
-	Cases     string `gorm:"type:jsonb;not null" json:"cases"`
+	ProblemID uint   `gorm:"primaryKey;" json:"problem_id"`
+	Cases     []Case `gorm:"type:jsonb;serializer:json" json:"cases"`
+}
+
+type Case struct {
+	Input          string `json:"input"`
+	ExpectedOutput string `json:"expected_output"`
 }
 
 func InsertData(db *gorm.DB) {
@@ -46,15 +51,27 @@ func InsertData(db *gorm.DB) {
 	testCases := []TestCase{
 		{
 			ProblemID: 1,
-			Cases:     `[{"input": "1 2", "expected_output": "3"}, {"input": "3 5", "expected_output": "8"}, {"input": "10 15", "expected_output": "25"}]`,
+			Cases: []Case{
+				{Input: "1 2", ExpectedOutput: "3"},
+				{Input: "3 5", ExpectedOutput: "8"},
+				{Input: "10 15", ExpectedOutput: "25"},
+			},
 		},
 		{
 			ProblemID: 2,
-			Cases:     `[{"input": ["hello", "world"], "expected_output": "helloworld"}, {"input": ["foo", "bar"], "expected_output": "foobar"}, {"input": ["abc", "def"], "expected_output": "abcdef"}]`,
+			Cases: []Case{
+				{Input: "hello world", ExpectedOutput: "helloworld"},
+				{Input: "foo bar", ExpectedOutput: "foobar"},
+				{Input: "abc def", ExpectedOutput: "abcdef"},
+			},
 		},
 		{
 			ProblemID: 3,
-			Cases:     `[{"input": "[1, 2, 3, 4, 5]", "expected_output": "5"}, {"input": "[-1, -2, -3, -4]", "expected_output": "-1"}, {"input": "[10, 100, 30, 40]", "expected_output": "100"}]`,
+			Cases: []Case{
+				{Input: "1, 2, 3, 4, 5", ExpectedOutput: "5"},
+				{Input: "-1, -2, -3, -4", ExpectedOutput: "-1"},
+				{Input: "10, 100, 30, 40", ExpectedOutput: "100"},
+			},
 		},
 	}
 

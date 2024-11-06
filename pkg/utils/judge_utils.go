@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"oj-back/app/db"
 	"oj-back/app/models"
@@ -10,51 +9,6 @@ import (
 	"os/exec"
 	"strings"
 )
-
-// 题目配置
-type Question struct {
-	ID          int
-	Title       string
-	Description string
-}
-
-// 测试用例
-type TestCase struct {
-	Input          string `json:"input"`
-	ExpectedOutput string `json:"expected_output"`
-}
-
-func (t *TestCase) UnmarshalJSON(data []byte) error {
-	// 使用匿名结构体解析 ExpectedOutput 和通用的 Input 字段
-	aux := struct {
-		Input          interface{} `json:"input"`
-		ExpectedOutput string      `json:"expected_output"`
-	}{}
-
-	// 解析 JSON 数据
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	// 根据 Input 的类型进行处理
-	switch v := aux.Input.(type) {
-	case string:
-		t.Input = v // 如果是字符串，直接赋值
-	case []interface{}:
-		// 将 []interface{} 转为 []string 后拼接
-		var strParts []string
-		for _, item := range v {
-			strParts = append(strParts, fmt.Sprintf("%v", item))
-		}
-		t.Input = strings.Join(strParts, " ")
-	default:
-		return fmt.Errorf("未知的 input 类型: %T", v)
-	}
-
-	// 赋值 ExpectedOutput
-	t.ExpectedOutput = aux.ExpectedOutput
-	return nil
-}
 
 // 编译并运行 C 代码字符串，并传入测试输入，返回代码的输出结果
 func RunCode(language string, codeContent string, input string) (string, error) {
@@ -104,21 +58,14 @@ func CompareOutput(actualOutput string, expectedOutput string) bool {
 }
 
 // 从数据库中获取测试用例
-func GetTestCases(problemID int) ([]TestCase, error) {
+func GetTestCases(problemID int) ([]models.Case, error) {
 	var record models.TestCase
 
-	// 使用 GORM 查询
 	err := db.DB.Where("problem_id = ?", problemID).First(&record).Error
 	if err != nil {
 		return nil, fmt.Errorf("查询测试用例失败: %v", err)
 	}
+	cases := record.Cases
 
-	// 将 JSON 字符串解析为 TestCase 切片
-	var testCases []TestCase
-	err = json.Unmarshal([]byte(record.Cases), &testCases)
-	if err != nil {
-		return nil, fmt.Errorf("解析测试用例 JSON 失败: %v", err)
-	}
-
-	return testCases, nil
+	return cases, nil
 }
