@@ -10,13 +10,9 @@ import (
 type Problem struct {
 	ID          uint           `gorm:"primaryKey;autoIncrement;not null" json:"id"`
 	Name        string         `gorm:"not null" json:"name"`
-	Description string         `gorm:"not null" json:"description"`
-	Tags        pq.StringArray `gorm:"type:text[];" json:"tags"`
-	TestCases   TestCase       `gorm:"foreignKey:ProblemID" json:"test_cases"`
-}
-
-func (Problem) TableName() string {
-	return "problems"
+	Description string         `gorm:"not null" json:"description,omitempty"`
+	Tags        pq.StringArray `gorm:"type:text[];" json:"tags,omitempty"`
+	TestCases   TestCase       `gorm:"foreignKey:ProblemID" json:"test_cases,omitempty"`
 }
 
 type TestCase struct {
@@ -24,13 +20,7 @@ type TestCase struct {
 	Cases     string `gorm:"type:jsonb;not null" json:"cases"`
 }
 
-func (TestCase) TableName() string {
-	return "test_cases"
-}
-
-// 插入数据
 func InsertData(db *gorm.DB) {
-	// 创建问题数据
 	problems := []Problem{
 		{
 			Name:        "加法运算",
@@ -53,7 +43,6 @@ func InsertData(db *gorm.DB) {
 		log.Fatal("插入问题数据失败:", err)
 	}
 
-	// 创建测试用例数据
 	testCases := []TestCase{
 		{
 			ProblemID: 1,
@@ -69,9 +58,7 @@ func InsertData(db *gorm.DB) {
 		},
 	}
 
-	// 插入测试用例数据
 	if err := db.Create(&testCases).Error; err != nil {
 		log.Fatal("插入测试用例数据失败:", err)
 	}
-
 }
