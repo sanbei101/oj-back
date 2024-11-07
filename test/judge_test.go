@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// 测试 EvaluateProblem 函数性能
 func BenchmarkEvaluateProblem(b *testing.B) {
 	// 定义测试用例
 	testCases := []models.Case{
