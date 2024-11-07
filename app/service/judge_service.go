@@ -18,49 +18,36 @@ type EvaluationResult struct {
 	Results []TestResult `json:"results"`
 }
 
-// 评测函数，循环遍历每个测试用例并进行评测
 func EvaluateProblem(language string, codeContent string, testCases []models.Case) (*EvaluationResult, error) {
-	var results []TestResult
-	var mu sync.Mutex
 	var wg sync.WaitGroup
-	var firstErr error
-	var once sync.Once
+	results := make([]TestResult, len(testCases))
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		wg.Add(1)
-		go func(tc models.Case) {
+		go func(i int, tc models.Case) {
 			defer wg.Done()
 
 			// 执行用户代码并获取输出
 			output, err := utils.RunCode(language, codeContent, tc.Input)
 			if err != nil {
-				once.Do(func() {
-					firstErr = err
-				})
+				results[i] = TestResult{
+					IsSuccess:      false,
+					ExpectedOutput: tc.ExpectedOutput,
+					ActualOutput:   err.Error(),
+				}
 				return
 			}
-
-			// 比对输出
 			isCorrect := utils.CompareOutput(output, tc.ExpectedOutput)
-
-			// 记录每个测试结果
-			mu.Lock()
-			results = append(results, TestResult{
+			results[i] = TestResult{
 				IsSuccess:      isCorrect,
 				ExpectedOutput: tc.ExpectedOutput,
 				ActualOutput:   output,
-			})
-			mu.Unlock()
-		}(testCase)
+			}
+		}(i, testCase)
 	}
 
 	wg.Wait()
 
-	if firstErr != nil {
-		return nil, firstErr
-	}
-
-	// 生成总的评测结果
 	evaluation := &EvaluationResult{
 		Count:   len(results),
 		Results: results,
