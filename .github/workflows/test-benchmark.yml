@@ -26,7 +26,25 @@ jobs:
       run: go mod tidy
 
     - name: Run tests
-      run: go test ./test/... -v
+      run: |
+        go test ./test/... -v | tee test-results.txt
 
     - name: Run benchmark
-      run: go test ./test/... -bench=. -v
+      run: |
+        go test ./test/... -bench=. -v | tee benchmark-results.txt
+
+    - name: Save test results as summary
+      if: success() || failure()
+      run: |
+        echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat test-results.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
+    - name: Save benchmark results as summary
+      if: success() || failure()
+      run: |
+        echo "### Benchmark Results" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat benchmark-results.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
