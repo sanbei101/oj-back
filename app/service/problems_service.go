@@ -28,7 +28,7 @@ func GetAllProblems(page int, size int, keyword string) (*Page[ProblemDTO], erro
 	var problems []ProblemDTO
 	var total int64
 	query := db.DB.Model(&models.Problem{})
-	if keyword == "" {
+	if keyword != "" {
 		query = query.Where("name LIKE ?", "%"+keyword+"%")
 	}
 
