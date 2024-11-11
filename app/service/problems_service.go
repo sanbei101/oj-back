@@ -13,13 +13,13 @@ type Page[T any] struct {
 	Data  []T   `json:"data"`
 }
 type ProblemDTO struct {
-	ID   uint           `json:"id"`
-	Name string         `json:"name"`
+	ID   uint           `json:"problemId"`
+	Name string         `json:"title"`
 	Tags pq.StringArray `gorm:"type:text[];" json:"tags,omitempty"`
 }
 type ProblemDetailDTO struct {
-	ID          uint           `json:"id"`
-	Name        string         `json:"name"`
+	ID          uint           `json:"problemId"`
+	Name        string         `json:"title"`
 	Description string         `json:"description"`
 	Tags        pq.StringArray `gorm:"type:text[];" json:"tags,omitempty"`
 }
@@ -40,7 +40,6 @@ func GetAllProblems(page int, size int, keyword string) (*Page[ProblemDTO], erro
 		return nil, fmt.Errorf("获取题目列表失败: %w", err)
 	}
 
-	// 返回封装的分页结果
 	return &Page[ProblemDTO]{
 		Total: total,
 		Data:  problems,
@@ -54,5 +53,6 @@ func GetProblemByID(id int) (*ProblemDetailDTO, error) {
 	if err != nil {
 		return nil, fmt.Errorf("获取题目详情失败: %w", err)
 	}
+
 	return &problem, nil
 }
