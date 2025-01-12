@@ -2,16 +2,12 @@ name: test and benchmark
 
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout repository
