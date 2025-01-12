@@ -1,4 +1,4 @@
-FROM golang:1.23 AS builder
+FROM golang:alpine AS builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN go mod download
 RUN GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o main ./cmd
 
 
-FROM alpine:latest AS runner
+FROM alpine:3.21 AS runner
 
 WORKDIR /app
 
@@ -17,5 +17,7 @@ WORKDIR /app
 RUN apk add --no-cache gcc musl-dev
 
 COPY --from=builder /app/main .
+
+EXPOSE 3000
 
 CMD ["./main"]
