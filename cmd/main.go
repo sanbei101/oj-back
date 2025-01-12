@@ -22,11 +22,12 @@ func main() {
 	})
 	// 判题逻辑
 	judgeGroup := app.Group("/judge")
-	judgeGroup.Post("/submit", controller.JudgeCode)
+	judgeGroup.Post("/submit-code", controller.JudgeCode)
 
-	// 核心逻辑
-	coreGroup := app.Group("/core")
-	coreGroup.Get("/problem", controller.GetAllProblems)
-
+	//
+	problemGroup := app.Group("/problem")
+	problemGroup.Get("/get-all-problem", controller.GetAllProblems)
+	problemGroup.Get("/get-problem-by-id", controller.GetProblemByID)
+	problemGroup.Get("/get-problem-test-case", controller.GetProblemTestCase)
 	app.Listen("0.0.0.0:3000")
 }

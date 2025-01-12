@@ -35,3 +35,13 @@ func GetProblemByID(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(problem)
 }
+
+func GetProblemTestCase(c *fiber.Ctx) error {
+	problemID := c.QueryInt("problem_id")
+	cases, err := service.ProblemServiceApp.GetProblemTestCase(uint64(problemID))
+	if err != nil {
+		utils.HandleError(c, err, "获取测试用例失败")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(cases)
+}

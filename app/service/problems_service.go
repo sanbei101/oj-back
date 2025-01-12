@@ -40,8 +40,7 @@ func (ps *ProblemService) GetAllProblems(page int, size int, keyword string) (*m
 // GetProblemByID 查询指定 ID 的题目详情
 func (ps *ProblemService) GetProblemByID(id int) (*model.Problem, error) {
 	var problem model.Problem
-	err := db.DB.Model(&model.Problem{}).Where("id = ?", id).First(&problem).Error
-	if err != nil {
+	if err := db.DB.First(&problem, id).Error; err != nil {
 		return nil, fmt.Errorf("获取题目详情失败: %w", err)
 	}
 
@@ -49,14 +48,13 @@ func (ps *ProblemService) GetProblemByID(id int) (*model.Problem, error) {
 	return &problem, nil
 }
 
+// GetProblemTestCase 查询指定题目的测试用例
 func (ps *ProblemService) GetProblemTestCase(problemID uint64) ([]model.Case, error) {
 	var record model.TestCase
 
-	err := db.DB.Where("problem_id = ?", problemID).First(&record).Error
-	if err != nil {
+	if err := db.DB.Where("problem_id = ?", problemID).First(&record).Error; err != nil {
 		return nil, fmt.Errorf("查询测试用例失败: %v", err)
 	}
-	cases := record.Cases
 
-	return cases, nil
+	return record.Cases, nil
 }
