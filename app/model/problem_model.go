@@ -8,11 +8,11 @@ import (
 )
 
 type Problem struct {
-	ID          uint64         `gorm:"primaryKey;autoIncrement;" json:"problemId;omitempty"`
+	ID          uint64         `gorm:"primaryKey;autoIncrement;" json:"problemId,omitempty"`
 	Name        string         `gorm:"not null" json:"title"`
 	Description string         `gorm:"not null" json:"description"`
 	Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
-	TestCase    TestCase       `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE" json:"test_case;omitempty"`
+	TestCase    TestCase       `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE" json:"test_case,omitempty"`
 }
 
 type TestCase struct {
