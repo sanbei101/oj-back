@@ -13,7 +13,7 @@ var DB *gorm.DB
 
 func InitDB() *gorm.DB {
 	var err error
-	const dsn string = "host=125.91.126.101 user=ghr password=GZH031ghr dbname=mydatabase port=5432 sslmode=disable "
+	const dsn string = "host=125.91.126.101 user=ghr password=GZH031ghr dbname=mydatabase port=5433 sslmode=disable "
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
 	})
