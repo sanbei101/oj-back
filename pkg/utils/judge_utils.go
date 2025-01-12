@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"oj-back/app/db"
-	"oj-back/app/models"
 	"os"
 	"os/exec"
 	"strings"
@@ -115,17 +113,4 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 // 比较实际输出与预期输出是否一致
 func CompareOutput(actualOutput string, expectedOutput string) bool {
 	return strings.TrimSpace(actualOutput) == strings.TrimSpace(expectedOutput)
-}
-
-// 从数据库中获取测试用例
-func GetTestCases(problemID int) ([]models.Case, error) {
-	var record models.TestCase
-
-	err := db.DB.Where("problem_id = ?", problemID).First(&record).Error
-	if err != nil {
-		return nil, fmt.Errorf("查询测试用例失败: %v", err)
-	}
-	cases := record.Cases
-
-	return cases, nil
 }

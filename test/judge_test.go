@@ -2,7 +2,7 @@ package test
 
 import (
 	"encoding/base64"
-	"oj-back/app/models"
+	"oj-back/app/model"
 	"oj-back/app/service"
 	"testing"
 
@@ -12,7 +12,7 @@ import (
 // 测试 EvaluateProblem 函数性能
 func BenchmarkEvaluateProblem(b *testing.B) {
 	// 定义测试用例
-	testCases := []models.Case{
+	testCases := []model.Case{
 		{
 			Input:          "2 3",
 			ExpectedOutput: "5",
@@ -41,7 +41,7 @@ func BenchmarkEvaluateProblem(b *testing.B) {
 	encodedCodeContent := base64.StdEncoding.EncodeToString([]byte(codeContent))
 
 	for i := 0; i < b.N; i++ {
-		_, err := service.EvaluateProblem("c", encodedCodeContent, testCases)
+		_, err := service.JudgeServiceApp.EvaluateProblem("c", encodedCodeContent, testCases)
 		if err != nil {
 			b.Fatalf("评测失败: %v", err)
 		}
@@ -49,7 +49,7 @@ func BenchmarkEvaluateProblem(b *testing.B) {
 }
 func TestEvaluateProblem(t *testing.T) {
 	// 定义测试用例
-	testCases := []models.Case{
+	testCases := []model.Case{
 		{
 			Input:          "2 3",
 			ExpectedOutput: "5",
@@ -76,7 +76,7 @@ func TestEvaluateProblem(t *testing.T) {
 	`
 	//base64编码
 	codeContent = base64.StdEncoding.EncodeToString([]byte(codeContent))
-	evaluationResult, err := service.EvaluateProblem("c", codeContent, testCases)
+	evaluationResult, err := service.JudgeServiceApp.EvaluateProblem("c", codeContent, testCases)
 	assert.NoError(t, err)
 	assert.Equal(t, len(testCases), evaluationResult.Count)
 	for i, result := range evaluationResult.Results {

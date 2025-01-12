@@ -10,19 +10,19 @@ import (
 func JudgeCode(c *fiber.Ctx) error {
 	payload := struct {
 		Language  string `json:"language"`
-		ProblemID int    `json:"problem_id"`
+		ProblemID uint64 `json:"problem_id"`
 		Code      string `json:"code"`
 	}{}
 	if err := c.BodyParser(&payload); err != nil {
 		return utils.HandleError(c, err, "请求格式错误")
 	}
 
-	problemCases, err := utils.GetTestCases(payload.ProblemID)
+	problemCases, err := service.ProblemServiceApp.GetProblemTestCase(payload.ProblemID)
 	if err != nil {
 		return utils.HandleError(c, err, "获取测试用例失败")
 	}
 
-	evaluation, err := service.EvaluateProblem(payload.Language, payload.Code, problemCases)
+	evaluation, err := service.JudgeServiceApp.EvaluateProblem(payload.Language, payload.Code, problemCases)
 	if err != nil {
 		return utils.HandleError(c, err, "评测失败")
 	}

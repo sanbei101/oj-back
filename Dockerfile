@@ -1,4 +1,4 @@
-FROM golang:alpine AS backend-builder
+FROM golang:1.23 AS builder
 
 WORKDIR /app
 
@@ -16,6 +16,6 @@ WORKDIR /app
 # 安装 gcc 和其他必要的构建工具
 RUN apk add --no-cache gcc musl-dev
 
-COPY --from=backend-builder /app/main .
+COPY --from=builder /app/main .
 
 CMD ["./main"]

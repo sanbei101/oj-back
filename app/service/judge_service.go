@@ -1,36 +1,28 @@
 package service
 
 import (
-	"oj-back/app/models"
+	"oj-back/app/model"
 	"oj-back/pkg/utils"
 	"sync"
 )
 
-// 评测结果结构体
-type TestResult struct {
-	IsSuccess      bool   `json:"is_success"`
-	ExpectedOutput string `json:"expected_output"`
-	ActualOutput   string `json:"actual_output"`
-}
+type JudgeService struct{}
 
-type EvaluationResult struct {
-	Count   int          `json:"count"`
-	Results []TestResult `json:"results"`
-}
+var JudgeServiceApp = new(JudgeService)
 
-func EvaluateProblem(language string, codeContent string, testCases []models.Case) (*EvaluationResult, error) {
+func (js *JudgeService) EvaluateProblem(language string, codeContent string, testCases []model.Case) (*model.EvaluationResult, error) {
 	var wg sync.WaitGroup
-	results := make([]TestResult, len(testCases))
+	results := make([]model.TestResult, len(testCases))
 
 	for i, testCase := range testCases {
 		wg.Add(1)
-		go func(i int, tc models.Case) {
+		go func(i int, tc model.Case) {
 			defer wg.Done()
 
 			// 执行用户代码并获取输出
 			output, err := utils.RunCode(language, codeContent, tc.Input)
 			if err != nil {
-				results[i] = TestResult{
+				results[i] = model.TestResult{
 					IsSuccess:      false,
 					ExpectedOutput: tc.ExpectedOutput,
 					ActualOutput:   err.Error(),
@@ -38,7 +30,7 @@ func EvaluateProblem(language string, codeContent string, testCases []models.Cas
 				return
 			}
 			isCorrect := utils.CompareOutput(output, tc.ExpectedOutput)
-			results[i] = TestResult{
+			results[i] = model.TestResult{
 				IsSuccess:      isCorrect,
 				ExpectedOutput: tc.ExpectedOutput,
 				ActualOutput:   output,
@@ -48,7 +40,7 @@ func EvaluateProblem(language string, codeContent string, testCases []models.Cas
 
 	wg.Wait()
 
-	evaluation := &EvaluationResult{
+	evaluation := &model.EvaluationResult{
 		Count:   len(results),
 		Results: results,
 	}

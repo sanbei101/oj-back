@@ -1,4 +1,4 @@
-package models
+package model
 
 import (
 	"log"
@@ -8,15 +8,15 @@ import (
 )
 
 type Problem struct {
-	ID          uint           `gorm:"primaryKey;autoIncrement;" json:"problemId"`
+	ID          uint64         `gorm:"primaryKey;autoIncrement;" json:"problemId;omitempty"`
 	Name        string         `gorm:"not null" json:"title"`
 	Description string         `gorm:"not null" json:"description"`
 	Tags        pq.StringArray `gorm:"type:text[]" json:"tags"`
-	TestCase    TestCase       `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE" json:"test_case"`
+	TestCase    TestCase       `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE" json:"test_case;omitempty"`
 }
 
 type TestCase struct {
-	ProblemID uint   `gorm:"primaryKey;" json:"problem_id"`
+	ProblemID uint64 `gorm:"primaryKey" json:"problem_id"`
 	Cases     []Case `gorm:"type:jsonb;serializer:json" json:"cases"`
 }
 
