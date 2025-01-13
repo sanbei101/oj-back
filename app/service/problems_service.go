@@ -19,9 +19,8 @@ func (ps *ProblemService) GetAllProblems(page int, size int, keyword string) (*m
 	if keyword != "" {
 		// 模糊匹配 name 和 tags
 		query = query.Where("name ILIKE ?", "%"+keyword+"%").
-			Or("tags ILIKE ?", "%"+keyword+"%") // 使用 ILIKE 进行大小写不敏感的匹配
+			Or("EXISTS (SELECT 1 FROM unnest(tags) t WHERE t ILIKE ?)", "%"+keyword+"%")
 	}
-
 	// 获取总数
 	if err := query.Count(&total).Error; err != nil {
 		return nil, fmt.Errorf("获取题目总数失败: %w", err)
