@@ -182,7 +182,7 @@ func BenchmarkGetProblemByID(b *testing.B) {
 
 	// 运行基准测试
 	for i := 0; i < b.N; i++ {
-		_, err := ProblemServiceApp.GetProblemByID(rand.Intn(100000 + 1))
+		_, err := ProblemServiceApp.GetProblemByID(rand.Intn(100000) + 1)
 		if err != nil {
 			b.Fatalf("查询题目详情失败: %v", err)
 		}
@@ -239,7 +239,7 @@ func BenchmarkGetProblemTestCase(b *testing.B) {
 
 	// 运行基准测试
 	for i := 0; i < b.N; i++ {
-		_, err := ProblemServiceApp.GetProblemTestCase(uint64(rand.Intn(100000 + 1)))
+		_, err := ProblemServiceApp.GetProblemTestCase(uint64(rand.Intn(100000) + 1))
 		if err != nil {
 			b.Fatalf("查询测试用例失败: %v", err)
 		}
