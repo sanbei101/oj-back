@@ -39,7 +39,7 @@ jobs:
 
     - name: Run benchmark
       run: |
-        go test ./test/... -bench=. -v | tee benchmark-results.txt
+        go test ./test/... -bench . -v -run="^(Benchmark)" | tee benchmark-results.txt
 
     - name: Save test results as summary
       if: success() || failure()
