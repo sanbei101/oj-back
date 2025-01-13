@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"oj-back/app/db"
 	"oj-back/app/model"
@@ -39,6 +40,41 @@ func InitTestDB() error {
 		return err
 	}
 	return nil
+}
+
+func InsertTestData() {
+	var problems []model.Problem
+	for i := 0; i < 100000; i++ {
+		problems = append(problems, model.Problem{
+			Name:        fmt.Sprintf("test%d", i+1),
+			Description: fmt.Sprintf("description%d", i+1),
+			Tags:        []string{fmt.Sprintf("tag%d", i%10+1), fmt.Sprintf("tag%d", (i+1)%10+1)},
+		})
+	}
+
+	var testCases []model.TestCase
+	for i := 0; i < 100000; i++ {
+		testCases = append(testCases, model.TestCase{
+			ProblemID: uint64(i + 1),
+			Cases: []model.Case{
+				{Input: "1 2", ExpectedOutput: "3"},
+				{Input: "3 5", ExpectedOutput: "8"},
+				{Input: "10 15", ExpectedOutput: "25"},
+			},
+		})
+	}
+
+	batchSize := 5000 // 每批次插入 5000 条
+	if err := db.DB.CreateInBatches(&problems, batchSize).Error; err != nil {
+		log.Fatalf("批量插入测试数据失败: %v", err)
+	}
+	if err := db.DB.CreateInBatches(&testCases, batchSize).Error; err != nil {
+		log.Fatalf("批量插入测试数据失败: %v", err)
+	}
+}
+func RemoveTestData() {
+	migrator := db.DB.Migrator()
+	migrator.DropTable(&model.Problem{}, &model.TestCase{})
 }
 func TestGetAllProblems(t *testing.T) {
 	if err := InitTestDB(); err != nil {
@@ -80,21 +116,7 @@ func BenchmarkGetAllProblems(b *testing.B) {
 	if err := InitTestDB(); err != nil {
 		b.Fatalf("初始化测试数据库失败: %v", err)
 	}
-
-	var problems []model.Problem
-	for i := 0; i < 100000; i++ {
-		problems = append(problems, model.Problem{
-			Name:        fmt.Sprintf("test%d", i+1),
-			Description: fmt.Sprintf("description%d", i+1),
-			Tags:        []string{fmt.Sprintf("tag%d", i%10+1), fmt.Sprintf("tag%d", (i+1)%10+1)},
-		})
-	}
-
-	batchSize := 5000 // 每批次插入 5000 条
-	if err := db.DB.CreateInBatches(&problems, batchSize).Error; err != nil {
-		b.Fatalf("批量插入测试数据失败: %v", err)
-	}
-
+	InsertTestData()
 	b.ResetTimer()
 
 	// 运行基准测试
@@ -106,11 +128,7 @@ func BenchmarkGetAllProblems(b *testing.B) {
 			b.Fatalf("查询题目失败: %v", err)
 		}
 	}
-
-	// 清理测试数据
-	if err := db.DB.Delete(&problems).Error; err != nil {
-		b.Fatalf("删除测试数据失败: %v", err)
-	}
+	RemoveTestData()
 }
 
 func TestGetProblemByID(t *testing.T) {
@@ -149,20 +167,7 @@ func BenchmarkGetProblemByID(b *testing.B) {
 		b.Fatalf("初始化测试数据库失败: %v", err)
 	}
 
-	var problems []model.Problem
-	for i := 0; i < 100000; i++ {
-		problems = append(problems, model.Problem{
-			Name:        fmt.Sprintf("test%d", i+1),
-			Description: fmt.Sprintf("description%d", i+1),
-			Tags:        []string{fmt.Sprintf("tag%d", i%10+1), fmt.Sprintf("tag%d", (i+1)%10+1)},
-		})
-	}
-
-	batchSize := 5000 // 每批次插入 5000 条
-	if err := db.DB.CreateInBatches(&problems, batchSize).Error; err != nil {
-		b.Fatalf("批量插入测试数据失败: %v", err)
-	}
-
+	InsertTestData()
 	b.ResetTimer()
 
 	// 运行基准测试
@@ -173,10 +178,7 @@ func BenchmarkGetProblemByID(b *testing.B) {
 		}
 	}
 
-	// 清理测试数据
-	if err := db.DB.Delete(&problems).Error; err != nil {
-		b.Fatalf("删除测试数据失败: %v", err)
-	}
+	RemoveTestData()
 }
 
 func TestGetProblemTestCase(t *testing.T) {
@@ -210,8 +212,9 @@ func TestGetProblemTestCase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("查询测试用例失败: %v", err)
 	}
-	if len(testCase) != 1 {
-		t.Fatalf("查询测试用例题目 ID 错误")
+
+	if testCase[0].Input != "1 2" || testCase[0].ExpectedOutput != "3" {
+		t.Fatalf("测试用例错误: %v", testCase)
 	}
 }
 
@@ -220,34 +223,7 @@ func BenchmarkGetProblemTestCase(b *testing.B) {
 		b.Fatalf("初始化测试数据库失败: %v", err)
 	}
 
-	var problems []model.Problem
-	for i := 0; i < 100000; i++ {
-		problems = append(problems, model.Problem{
-			Name:        fmt.Sprintf("test%d", i+1),
-			Description: fmt.Sprintf("description%d", i+1),
-			Tags:        []string{fmt.Sprintf("tag%d", i%10+1), fmt.Sprintf("tag%d", (i+1)%10+1)},
-		})
-	}
-
-	var testCases []model.TestCase
-	for i := 0; i < 100000; i++ {
-		testCases = append(testCases, model.TestCase{
-			ProblemID: uint64(i + 1),
-			Cases: []model.Case{
-				{Input: "1 2", ExpectedOutput: "3"},
-				{Input: "3 5", ExpectedOutput: "8"},
-				{Input: "10 15", ExpectedOutput: "25"},
-			},
-		})
-	}
-
-	batchSize := 5000 // 每批次插入 5000 条
-	if err := db.DB.CreateInBatches(&problems, batchSize).Error; err != nil {
-		b.Fatalf("批量插入测试数据失败: %v", err)
-	}
-	if err := db.DB.CreateInBatches(&testCases, batchSize).Error; err != nil {
-		b.Fatalf("批量插入测试数据失败: %v", err)
-	}
+	InsertTestData()
 
 	b.ResetTimer()
 
@@ -259,11 +235,5 @@ func BenchmarkGetProblemTestCase(b *testing.B) {
 		}
 	}
 
-	// 清理测试数据
-	if err := db.DB.Delete(&problems).Error; err != nil {
-		b.Fatalf("删除测试数据失败: %v", err)
-	}
-	if err := db.DB.Delete(&testCases).Error; err != nil {
-		b.Fatalf("删除测试数据失败: %v", err)
-	}
+	RemoveTestData()
 }
