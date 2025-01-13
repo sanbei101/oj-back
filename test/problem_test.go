@@ -7,10 +7,13 @@ import (
 	"oj-back/app/db"
 	"oj-back/app/model"
 	"oj-back/app/service"
+	"os"
 	"testing"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -23,12 +26,19 @@ func InitTestDB() error {
 	const dsn string = "host=localhost user=testuser password=justfortest dbname=testdatabase sslmode=disable "
 	TestDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
+		Logger: logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags),
+			logger.Config{
+				LogLevel:      logger.Warn,     // 设置日志级别
+				SlowThreshold: time.Second * 2, // 慢查询的时间阈值
+				Colorful:      false,           // 是否开启日志输出的彩色
+			},
+		),
 	})
 	db.DB = TestDB
 	if err != nil {
 		return err
 	}
-	fmt.Println("数据库连接成功")
 	migrator := db.DB.Migrator()
 	if err := migrator.DropTable(&model.Problem{}, &model.TestCase{}); err != nil {
 		return err
