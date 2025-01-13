@@ -15,8 +15,11 @@ func (ps *ProblemService) GetAllProblems(page int, size int, keyword string) (*m
 	var problems []model.Problem
 	var total int64
 	query := db.DB.Model(&model.Problem{})
+	// 如果关键词不为空，进行匹配
 	if keyword != "" {
-		query = query.Where("name LIKE ?", "%"+keyword+"%")
+		// 模糊匹配 name 和 tags
+		query = query.Where("name ILIKE ?", "%"+keyword+"%").
+			Or("tags ILIKE ?", "%"+keyword+"%") // 使用 ILIKE 进行大小写不敏感的匹配
 	}
 
 	// 获取总数
