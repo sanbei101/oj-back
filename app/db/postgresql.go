@@ -30,6 +30,7 @@ func InitDB() *gorm.DB {
 	if err := migrator.CreateTable(&model.Problem{}, &model.TestCase{}); err != nil {
 		log.Fatalf("创建表失败: %v", err)
 	}
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_problems_tags_gin ON problems USING GIN (tags);`)
 	model.InsertData(DB)
 	return DB
 }
