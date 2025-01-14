@@ -3,9 +3,10 @@ package utils
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/panjf2000/ants/v2"
 	"os"
 	"strings"
+
+	"github.com/panjf2000/ants/v2"
 )
 
 var (
@@ -29,13 +30,13 @@ func init() {
 	// 初始化一个带有返回值的协程池
 	pool, err = ants.NewPoolWithFunc(maxPoolSize, func(task interface{}) {
 		t := task.(*runCodeTask)
+		// 执行任务
 		t.output, t.err = t.run()
 		t.done <- true
 	})
 	if err != nil {
 		panic(fmt.Sprintf("无法创建协程池: %v", err))
 	}
-	fmt.Println("协程池初始化成功")
 }
 
 func (t *runCodeTask) run() (string, error) {
