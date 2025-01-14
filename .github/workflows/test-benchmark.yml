@@ -35,11 +35,11 @@ jobs:
 
     - name: Run tests
       run: |
-        go test ./test/... -v | tee test-results.txt
+        go test ./... -v | tee test-results.txt
 
     - name: Run benchmark
       run: |
-        go test ./test/... -bench . -v -run="^(Benchmark)" | tee benchmark-results.txt
+        go test ./... -bench . -v -run="^(Benchmark)" | tee benchmark-results.txt
 
     - name: Save test results as summary
       if: success() || failure()
