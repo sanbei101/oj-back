@@ -96,7 +96,7 @@ func TestGetAllProblems(t *testing.T) {
 	keyword := "test"
 	result, err := ProblemServiceApp.GetAllProblems(page, size, keyword)
 	assert.NoError(t, err, "查询题目失败: %v", err)
-	assert.Equal(t, int64(size), result.Total, "查询题目总数错误")
+	assert.Equal(t, int64(InsertDataSize), result.Total, "查询题目总数错误")
 	assert.Equal(t, size, len(result.Data), "查询题目数量错误")
 
 	RemoveTestData()

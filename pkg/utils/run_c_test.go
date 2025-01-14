@@ -1,10 +1,11 @@
 package utils
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // 检测C语言运行模块是否能正常执行
@@ -40,7 +41,7 @@ func TestBasic(t *testing.T) {
 	}(codeFile.Name())
 
 	// 执行
-	output, err := runCCode(codeFile, "10 20", 0)
+	output, err := runCCode(codeFile, "10 20", 6)
 	expected := "30"
 
 	// 检查输出
