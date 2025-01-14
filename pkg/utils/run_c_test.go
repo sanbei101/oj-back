@@ -2,7 +2,6 @@ package utils
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,14 +40,11 @@ func TestBasic(t *testing.T) {
 	}(codeFile.Name())
 
 	// 执行
-	output, err := runCCode(codeFile, "10 20", 6)
+	output, err := runCCode(codeFile, "10 20")
 	expected := "30"
 
 	// 检查输出
 	assert.NoError(t, err)
 	same, _ := CompareOutput(output, expected)
 	assert.True(t, same)
-
-	// 检测编译后的可执行文件是否被删除
-	assert.NoFileExists(t, path.Join(os.TempDir(), "user_code_out_0"))
 }

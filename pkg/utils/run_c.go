@@ -7,12 +7,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 // 运行单一C语言源代码文件
-func runCCode(codeFile *os.File, input string, threadID int) (string, error) {
+func runCCode(codeFile *os.File, input string) (string, error) {
 	// 计算出编译目标文件绝对路径
-	outputFile := fmt.Sprintf("user_code_out_%d", threadID)
+	outputFile := fmt.Sprintf("c_out_%s", uuid.New().String())
 	destPath := filepath.Join(os.TempDir(), outputFile)
 	defer os.Remove(destPath)
 

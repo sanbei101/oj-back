@@ -16,7 +16,6 @@ var (
 )
 
 type runCodeTask struct {
-	threadID    int
 	language    string
 	codeContent string
 	input       string
@@ -59,7 +58,7 @@ func (t *runCodeTask) run() (string, error) {
 	codeFile.Close()
 
 	if t.language == "c" {
-		return runCCode(codeFile, t.input, t.threadID)
+		return runCCode(codeFile, t.input)
 	}
 	if t.language == "python" {
 		return runPyCode(codeFile, t.input)
@@ -68,9 +67,8 @@ func (t *runCodeTask) run() (string, error) {
 	return "", fmt.Errorf("不支持的语言")
 }
 
-func RunCode(ThreadID int, language string, codeContent string, input string) (string, error) {
+func RunCode(language string, codeContent string, input string) (string, error) {
 	task := &runCodeTask{
-		threadID:    ThreadID,
 		language:    language,
 		codeContent: codeContent,
 		input:       input,
