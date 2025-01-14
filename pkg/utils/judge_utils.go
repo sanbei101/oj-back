@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -48,8 +49,8 @@ func (t *runCodeTask) run() (string, error) {
 		return "", fmt.Errorf("解码代码失败: %v", err)
 	}
 
-	// 将解码后的代码写入临时文件
-	codeFile, err := os.CreateTemp("", "user_code_*.c")
+	fileName := fmt.Sprintf("c_code_%s.c", uuid.New().String())
+	codeFile, err := os.Create(fileName)
 	if err != nil {
 		return "", fmt.Errorf("创建临时文件失败: %v", err)
 	}
