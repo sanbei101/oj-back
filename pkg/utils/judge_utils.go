@@ -1,15 +1,11 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-	"time"
-
 	"github.com/panjf2000/ants/v2"
+	"os"
+	"strings"
 )
 
 var (
@@ -19,6 +15,7 @@ var (
 )
 
 type runCodeTask struct {
+	threadID    int
 	language    string
 	codeContent string
 	input       string
@@ -42,7 +39,7 @@ func init() {
 }
 
 func (t *runCodeTask) run() (string, error) {
-	if t.language != "c" {
+	if !(t.language == "c" || t.language == "python") {
 		return "", fmt.Errorf("不支持的语言")
 	}
 
@@ -60,38 +57,36 @@ func (t *runCodeTask) run() (string, error) {
 	codeFile.Write(decodedCode)
 	codeFile.Close()
 
-	// 编译代码
-	outputFile := fmt.Sprintf("./user_code_out_%d", time.Now().UnixNano())
-	defer os.Remove(outputFile)
-
-	cmd := exec.Command("gcc", codeFile.Name(), "-o", outputFile)
-
-	// 捕获标准错误输出
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
-	// 执行编译命令
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("编译失败: %v, %s", err, stderr.String())
+	if t.language == "c" {
+		return runCCode(codeFile, t.input, t.threadID)
+	}
+	if t.language == "python" {
+		return runPyCode(codeFile, t.input)
 	}
 
-	// 运行编译后的可执行文件
-	runCmd := exec.Command(outputFile)
-	var out, runStderr bytes.Buffer
-	runCmd.Stdin = strings.NewReader(t.input)
-	runCmd.Stdout = &out
-	runCmd.Stderr = &runStderr
-
-	// 执行运行命令
-	if err := runCmd.Run(); err != nil {
-		return "", fmt.Errorf("执行代码错误: %v, %s", err, runStderr.String())
-	}
-
-	return out.String(), nil
+	return "", fmt.Errorf("不支持的语言")
 }
 
-func RunCode(language string, codeContent string, input string) (string, error) {
+// RunCode executes code in a specified language with given input using a goroutine pool.
+// It creates a task with a thread ID, language, code content, and input, then submits
+// the task to the pool for concurrent execution. The function waits for the task to
+// complete and returns the output or any error encountered during execution.
+//
+// Parameters:
+//   - ThreadID: An identifier for the thread executing the code
+//   - language: The programming language of the code (supports "c" and "python")
+//   - codeContent: The code to be executed, provided as a string
+//   - input: Input data for the code execution
+//
+// Returns:
+//   - A string containing the output of the code execution
+//   - An error if task submission or execution fails
+//
+// Example:
+//   output, err := RunCode(1, "python", "print('Hello, World!')", "")
+func RunCode(ThreadID int, language string, codeContent string, input string) (string, error) {
 	task := &runCodeTask{
+		threadID:    ThreadID,
 		language:    language,
 		codeContent: codeContent,
 		input:       input,
@@ -110,7 +105,11 @@ func RunCode(language string, codeContent string, input string) (string, error) 
 	return task.output, task.err
 }
 
-// 比较实际输出与预期输出是否一致
-func CompareOutput(actualOutput string, expectedOutput string) bool {
-	return strings.TrimSpace(actualOutput) == strings.TrimSpace(expectedOutput)
+// CompareOutput 比较实际输出与预期输出是否一致,
+// The second return value checks if the outputs are identical, including whitespace.
+func CompareOutput(actualOutput string, expectedOutput string) (same bool, strictlySame bool) {
+	// TODO: 似乎逻辑有点不足,例如每一行行尾的/r/n或/n无法区分,需要改进一下.
+	actual := strings.TrimSpace(actualOutput)
+	expected := strings.TrimSpace(expectedOutput)
+	return actual == expected, expectedOutput == actualOutput
 }
