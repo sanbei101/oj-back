@@ -1,4 +1,4 @@
-package test
+package service
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"oj-back/app/db"
 	"oj-back/app/model"
-	"oj-back/app/service"
 	"os"
 	"testing"
 	"time"
@@ -17,8 +16,7 @@ import (
 )
 
 var (
-	TestDB            *gorm.DB
-	ProblemServiceApp = service.ProblemServiceApp
+	TestDB *gorm.DB
 )
 
 func InitTestDB() error {
