@@ -2,9 +2,10 @@ package service
 
 import (
 	"encoding/base64"
-	"github.com/stretchr/testify/assert"
 	"oj-back/app/model"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func BenchmarkBasicC(b *testing.B) {
@@ -41,9 +42,7 @@ func BenchmarkBasicC(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_, err := JudgeServiceApp.EvaluateProblem("c", encodedCodeContent, testCases)
-		if err != nil {
-			b.Fatalf("评测失败: %v", err)
-		}
+		assert.NoError(b, err)
 	}
 }
 
