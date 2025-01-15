@@ -19,7 +19,7 @@ var (
 type runCodeTask struct {
 	language     string
 	codeFilePath string
-	readLock     *sync.Mutex
+	readLock     *sync.RWMutex
 	input        string
 	output       string
 	err          error
@@ -61,7 +61,7 @@ func (t *runCodeTask) run() (string, error) {
 	return "", fmt.Errorf("不支持的语言")
 }
 
-func RunCode(language string, codeFilePath string, readLock *sync.Mutex, input string) (string, error) {
+func RunCode(language string, codeFilePath string, readLock *sync.RWMutex, input string) (string, error) {
 	task := &runCodeTask{
 		language:     language,
 		codeFilePath: codeFilePath,
@@ -93,9 +93,9 @@ func CompareOutput(actualOutput string, expectedOutput string) (same bool, stric
 
 // 该函数接受一个表示文件路径的字符串和一把读写锁,创建一个该文件的新副本,并返回这个副本的路径.
 // 副本文件需要上层函数自行删除.
-func getCopyOfSrcCode(srcFilePath string, readLock *sync.Mutex) (string, error) {
-	readLock.Lock()
-	defer readLock.Unlock()
+func getCopyOfSrcCode(srcFilePath string, readLock *sync.RWMutex) (string, error) {
+	readLock.RLock()
+	defer readLock.RUnlock()
 
 	// 打开源文件
 	srcFile, err := os.Open(srcFilePath)

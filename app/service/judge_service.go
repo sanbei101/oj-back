@@ -72,7 +72,7 @@ func (js *JudgeService) EvaluateSubmit(s *model.Submit) {
 // Evaluate 该函数作为bootstrap,接受一个代码文件,将其复制为多个副本并进行并发测评。
 func (js *JudgeService) Evaluate(language string, codeFilePath string, testCases []model.Case) *model.EvaluationResult {
 	var wg sync.WaitGroup
-	var lock = &sync.Mutex{}
+	var lock = &sync.RWMutex{}
 	results := make([]model.TestResult, len(testCases))
 
 	for i, testCase := range testCases {
@@ -95,7 +95,7 @@ func (js *JudgeService) Evaluate(language string, codeFilePath string, testCases
 }
 
 // 判断输出是否符合给定的单个测试用例。该函数不返回error,若出现error则写入TestResult中.
-func (js *JudgeService) judge(language string, codeFilePath string, readLock *sync.Mutex, testCase model.Case) (model.TestResult, error) {
+func (js *JudgeService) judge(language string, codeFilePath string, readLock *sync.RWMutex, testCase model.Case) (model.TestResult, error) {
 	output, err := utils.RunCode(language, codeFilePath, readLock, testCase.Input)
 	if err != nil {
 		returnVal := model.TestResult{
