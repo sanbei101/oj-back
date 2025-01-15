@@ -23,4 +23,17 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         push: true
-        tags: sanbei/oj-back:latest
+        tags: sanbei/cau-oj-backend:latest
+        
+    # 部署到我的服务器
+    - name: deploy docker to remote server
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        script: |
+          cd deploy
+          docker rm cau-oj-backend -f
+          docker rmi sanbei/cau-oj-backend -f
+          docker compose up -d

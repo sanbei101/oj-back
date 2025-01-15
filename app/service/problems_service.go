@@ -27,7 +27,7 @@ func (ps *ProblemService) GetAllProblems(page int, size int, keyword string) (*m
 	}
 
 	// 获取题目数据
-	err := query.Offset((page - 1) * size).Limit(size).Find(&problems).Error
+	err := query.Order("id ASC").Offset((page - 1) * size).Limit(size).Find(&problems).Error
 	if err != nil {
 		return nil, fmt.Errorf("获取题目列表失败: %w", err)
 	}
