@@ -29,17 +29,17 @@ func InsertData(db *gorm.DB) {
 	problems := []Problem{
 		{
 			Name:        "加法运算",
-			Description: "给定两个数字，输出它们的和。",
+			Description: "**梦开始的地方**\\n```c\\n#include <stdio.h>\\nint main() {\\n    int num1, num2, sum;\\n\\n    scanf(\\\"%d\\\", &num1);\\n    scanf(\\\"%d\\\", &num2);\\n    sum = num1 + num2;\\n    printf(\\\"%d\\n\\\", sum);\\n\\n    return 0;\\n}\\n```",
 			Tags:        []string{"数学", "简单"},
 		},
 		{
 			Name:        "字符串拼接",
-			Description: "给定两个字符串，返回它们拼接后的结果。",
+			Description: "**题目描述**\\n给定两个字符串，返回它们拼接后的结果。\\n\\n**示例**\\n```c\\n#include <stdio.h>\\n#include <string.h>\\n\\nint main() {\\n    char str1[100], str2[100];\\n\\n    scanf(\\\"%s\\\", str1);\\n    scanf(\\\"%s\\\", str2);\\n\\n    printf(\\\"%s%s\\n\\\", str1, str2);\\n\\n    return 0;\\n}\\n```",
 			Tags:        []string{"字符串", "简单"},
 		},
 		{
 			Name:        "最大数查找",
-			Description: "给定一个整数数组，返回其中的最大值。",
+			Description: "**题目描述**\\n给定一个整数数组，返回其中的最大值。\\n\\n**示例**\\n```c\\n#include <stdio.h>\\n\\nint main() {\\n    int n, i, max, num;\\n\\n    scanf(\\\"%d\\\", &n); // 输入数组长度\\n\\n    if (n > 0) {\\n        scanf(\\\"%d\\\", &max);\\n        for (i = 1; i < n; i++) {\\n            scanf(\\\"%d\\\", &num);\\n            if (num > max) {\\n                max = num;\\n            }\\n        }\\n    }\\n\\n    printf(\\\"%d\\n\\\", max);\\n\\n    return 0;\\n}\\n```",
 			Tags:        []string{"数组", "查找", "简单"},
 		},
 	}
