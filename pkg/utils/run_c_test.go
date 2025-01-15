@@ -40,7 +40,7 @@ func TestBasic(t *testing.T) {
 	}(codeFile.Name())
 
 	// 执行
-	output, err := runCCode(codeFile, "10 20")
+	output, err := runCCode(codeFile.Name(), "10 20")
 	expected := "30"
 
 	// 检查输出

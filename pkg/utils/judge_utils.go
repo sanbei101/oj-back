@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"strings"
+	"sync"
 
-	"github.com/google/uuid"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -17,12 +17,13 @@ var (
 )
 
 type runCodeTask struct {
-	language    string
-	codeContent string
-	input       string
-	output      string
-	err         error
-	done        chan bool
+	language     string
+	codeFilePath string
+	readLock     *sync.Mutex
+	input        string
+	output       string
+	err          error
+	done         chan bool
 }
 
 func init() {
@@ -44,36 +45,29 @@ func (t *runCodeTask) run() (string, error) {
 		return "", fmt.Errorf("不支持的语言")
 	}
 
-	decodedCode, err := base64.StdEncoding.DecodeString(t.codeContent)
+	//将传入的文件复制一份,防止并发冲突
+	copyOfSrc, err := getCopyOfSrcCode(t.codeFilePath, t.readLock)
 	if err != nil {
-		return "", fmt.Errorf("解码代码失败: %v", err)
+		return "", fmt.Errorf("创建临时代码文件失败: %v", err)
 	}
-
-	fileName := fmt.Sprintf("c_code_%s.c", uuid.New().String())
-	codeFile, err := os.Create(fileName)
-	if err != nil {
-		return "", fmt.Errorf("创建临时文件失败: %v", err)
-	}
-	defer os.Remove(codeFile.Name())
-	codeFile.Write(decodedCode)
-	codeFile.Close()
 
 	if t.language == "c" {
-		return runCCode(codeFile, t.input)
+		return runCCode(copyOfSrc, t.input)
 	}
 	if t.language == "python" {
-		return runPyCode(codeFile, t.input)
+		return runPyCode(copyOfSrc, t.input)
 	}
 
 	return "", fmt.Errorf("不支持的语言")
 }
 
-func RunCode(language string, codeContent string, input string) (string, error) {
+func RunCode(language string, codeFilePath string, readLock *sync.Mutex, input string) (string, error) {
 	task := &runCodeTask{
-		language:    language,
-		codeContent: codeContent,
-		input:       input,
-		done:        make(chan bool),
+		language:     language,
+		codeFilePath: codeFilePath,
+		readLock:     readLock,
+		input:        input,
+		done:         make(chan bool),
 	}
 
 	// 将任务提交到协程池
@@ -95,4 +89,41 @@ func CompareOutput(actualOutput string, expectedOutput string) (same bool, stric
 	actual := strings.TrimSpace(actualOutput)
 	expected := strings.TrimSpace(expectedOutput)
 	return actual == expected, expectedOutput == actualOutput
+}
+
+// 该函数接受一个表示文件路径的字符串和一把读写锁,创建一个该文件的新副本,并返回这个副本的路径.
+// 副本文件需要上层函数自行删除.
+func getCopyOfSrcCode(srcFilePath string, readLock *sync.Mutex) (string, error) {
+	readLock.Lock()
+	defer readLock.Unlock()
+
+	// 打开源文件
+	srcFile, err := os.Open(srcFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	// 创建副本文件
+	copyOfSrc, err := os.CreateTemp("", "copy_of_src_*")
+	if err != nil {
+		return "", err
+	}
+
+	// 复制
+	_, err = io.Copy(copyOfSrc, srcFile)
+	if err != nil {
+		return "", err
+	}
+
+	// 关闭文件
+	err = srcFile.Close()
+	if err != nil {
+		return "", err
+	}
+	err = copyOfSrc.Close()
+	if err != nil {
+		return "", err
+	}
+
+	return copyOfSrc.Name(), nil
 }

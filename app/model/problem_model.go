@@ -15,11 +15,13 @@ type Problem struct {
 	TestCase    *TestCase      `gorm:"foreignKey:ProblemID;constraint:OnDelete:CASCADE" json:"test_case,omitempty"`
 }
 
+// TestCase 包含某一问题的所有测试用例的结构体
 type TestCase struct {
 	ProblemID uint64 `gorm:"primaryKey;index" json:"problem_id"`
 	Cases     []Case `gorm:"type:jsonb;serializer:json" json:"cases"`
 }
 
+// Case 单一测试用例结构体,包括输入与输出
 type Case struct {
 	Input          string `json:"input"`
 	ExpectedOutput string `json:"expected_output"`

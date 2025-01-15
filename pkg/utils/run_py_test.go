@@ -31,7 +31,7 @@ func TestHelloWorld(t *testing.T) {
 	}(codeFile.Name())
 
 	//运行
-	output, err := runPyCode(codeFile, "")
+	output, err := runPyCode(codeFile.Name(), "")
 	assert.NoError(t, err)
 	same, _ := CompareOutput(output, "Hello World!")
 	assert.True(t, same)
@@ -60,6 +60,6 @@ func TestImport(t *testing.T) {
 		}
 	}(codeFile.Name())
 
-	_, err = runPyCode(codeFile, "")
+	_, err = runPyCode(codeFile.Name(), "")
 	assert.Error(t, err)
 }

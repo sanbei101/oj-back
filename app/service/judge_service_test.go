@@ -1,55 +1,14 @@
 package service
 
 import (
-	"encoding/base64"
 	"oj-back/app/model"
+	"oj-back/pkg/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func BenchmarkBasicC(b *testing.B) {
-	var JudgeServiceApp = new(JudgeService)
-
-	// 定义测试用例
-	testCases := []model.Case{
-		{
-			Input:          "2 3",
-			ExpectedOutput: "5",
-		},
-		{
-			Input:          "10 20",
-			ExpectedOutput: "30",
-		},
-		{
-			Input:          "-5 5",
-			ExpectedOutput: "0",
-		},
-	}
-
-	// 要测试的代码内容
-	codeContent := `
-	#include <stdio.h>
-	int main() {
-		int a, b;
-		scanf("%d %d", &a, &b);
-		printf("%d\n", a + b);
-		return 0;
-	}
-	`
-	// base64 编码
-	encodedCodeContent := base64.StdEncoding.EncodeToString([]byte(codeContent))
-
-	for i := 0; i < b.N; i++ {
-		_, err := JudgeServiceApp.EvaluateProblem("c", encodedCodeContent, testCases)
-		assert.NoError(b, err)
-	}
-}
-
 func TestBasicC(t *testing.T) {
-	var JudgeServiceApp = new(JudgeService)
-
-	// 定义测试用例
 	testCases := []model.Case{
 		{
 			Input:          "2 3",
@@ -65,7 +24,6 @@ func TestBasicC(t *testing.T) {
 		},
 	}
 
-	// 测试的代码内容
 	codeContent := `
 	#include <stdio.h>
 	int main() {
@@ -75,19 +33,11 @@ func TestBasicC(t *testing.T) {
 		return 0;
 	}
 	`
-	// base64编码
-	codeContent = base64.StdEncoding.EncodeToString([]byte(codeContent))
-	evaluationResult, err := JudgeServiceApp.EvaluateProblem("c", codeContent, testCases)
-	assert.NoError(t, err)
-	assert.Equal(t, len(testCases), evaluationResult.Count)
-	for i, result := range evaluationResult.Results {
-		assert.True(t, result.IsSuccess, "测试用例 %d 未通过, 输入: %s, 预期: %s, 实际: %s", i+1, testCases[i].Input, testCases[i].ExpectedOutput, result.ActualOutput)
-	}
+	testAllSuccess(t, codeContent, "c", testCases, 2)
 }
 
 // 测试Py模块能够兼容未格式化的期望输出
 func TestBadlyFormattedExpectedOut(t *testing.T) {
-	var JudgeServiceApp = new(JudgeService)
 
 	testCases := []model.Case{
 		{
@@ -109,19 +59,12 @@ func TestBadlyFormattedExpectedOut(t *testing.T) {
 	}
 
 	codeContent := `print("Hello, World!")`
-	codeContent = base64.StdEncoding.EncodeToString([]byte(codeContent))
-	evaluationResult, err := JudgeServiceApp.EvaluateProblem("python", codeContent, testCases)
-	assert.NoError(t, err)
-	assert.Equal(t, len(testCases), evaluationResult.Count)
-	for i, result := range evaluationResult.Results {
-		assert.True(t, result.IsSuccess, "测试用例 %d 未通过, 输入: %s, 预期: %s, 实际: %s", i+1, testCases[i].Input, testCases[i].ExpectedOutput, result.ActualOutput)
-	}
+
+	testAllSuccess(t, codeContent, "python", testCases, 2)
 }
 
 // 测试Py模块能够兼容未格式化的实际
 func TestBadlyFormattedActualOut(t *testing.T) {
-	var JudgeServiceApp = new(JudgeService)
-
 	testCases := []model.Case{
 		{
 			Input:          "",
@@ -137,13 +80,21 @@ func TestBadlyFormattedActualOut(t *testing.T) {
 		`print("\tHello, World!\r\n\t")`,
 	}
 
-	for i, codeContent := range codeContents {
-		codeContent = base64.StdEncoding.EncodeToString([]byte(codeContent))
-		evaluationResult, err := JudgeServiceApp.EvaluateProblem("python", codeContent, testCases)
-		assert.NoError(t, err)
+	for _, codeContent := range codeContents {
+		testAllSuccess(t, codeContent, "python", testCases, 2)
+	}
+}
+
+// 辅助函数,用来测试给定代码在一组测试用例下能否全部通过
+func testAllSuccess(t *testing.T, code string, language string, testCases []model.Case, repeat int) {
+	for range repeat {
+		codeFilePath := utils.TmpFile(t, code)
+		evaluationResult := JudgeServiceApp.Evaluate(language, codeFilePath, testCases)
 		assert.Equal(t, len(testCases), evaluationResult.Count)
-		for _, result := range evaluationResult.Results {
-			assert.True(t, result.IsSuccess, "测试用例 %d 未通过, 源代码: %s, 预期: %s, 实际: %s", i+1, codeContents[i], testCases[0].ExpectedOutput, result.ActualOutput)
+		for i, result := range evaluationResult.Results {
+			assert.True(t, result.IsSuccess,
+				"测试用例 %d 未通过, 输入: %s, 预期: %s, 实际: %s",
+				i+1, testCases[i].Input, testCases[i].ExpectedOutput, result.ActualOutput)
 		}
 	}
 }
