@@ -20,7 +20,7 @@ func (js *JudgeService) EvaluateProblem(language string, codeContent string, tes
 			defer wg.Done()
 
 			// 执行用户代码并获取输出
-			output, err := utils.RunCode(i, language, codeContent, tc.Input)
+			output, err := utils.RunCode(language, codeContent, tc.Input)
 			if err != nil {
 				results[i] = model.TestResult{
 					IsSuccess:      false,
