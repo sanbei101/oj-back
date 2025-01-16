@@ -1,8 +1,11 @@
 package model
 
 import (
+	"fmt"
 	"log"
+	"os"
 
+	"github.com/BurntSushi/toml"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -26,105 +29,49 @@ type Case struct {
 }
 
 func InsertData(db *gorm.DB) {
-	problems := []Problem{
-		{
-			Name: "加法运算",
-			Description: "**题目描述**\n" +
-				"```c\n" +
-				"#include <stdio.h>\n" +
-				"int main() {\n" +
-				"    int num1, num2, sum;\n" +
-				"    scanf(\"%d\", &num1);\n" +
-				"    scanf(\"%d\", &num2);\n" +
-				"    sum = num1 + num2;\n" +
-				"    printf(\"%d\\n\", sum);\n" +
-				"    return 0;\n" +
-				"}\n" +
-				"```",
-			Tags: []string{"数学", "简单"},
-		},
-		{
-			Name: "冒泡排序",
-			Description: "**题目描述**\n" +
-				"```c\n" +
-				"#include <stdio.h>\n" +
-				"void bubbleSort(int arr[], int n) {\n" +
-				"    int i, j, temp;\n" +
-				"    for (i = 0; i < n-1; i++) {\n" +
-				"        for (j = 0; j < n-i-1; j++) {\n" +
-				"            if (arr[j] > arr[j+1]) {\n" +
-				"                temp = arr[j];\n" +
-				"                arr[j] = arr[j+1];\n" +
-				"                arr[j+1] = temp;\n" +
-				"            }\n" +
-				"        }\n" +
-				"    }\n" +
-				"}\n" +
-				"int main() {\n" +
-				"    int arr[] = {64, 34, 25, 12, 22, 11, 90};\n" +
-				"    int n = sizeof(arr)/sizeof(arr[0]);\n" +
-				"    bubbleSort(arr, n);\n" +
-				"    printf(\"Sorted array: \\n\");\n" +
-				"    for (int i=0; i < n; i++)\n" +
-				"        printf(\"%d \", arr[i]);\n" +
-				"    printf(\"\\n\");\n" +
-				"    return 0;\n" +
-				"}\n" +
-				"```",
-			Tags: []string{"排序", "冒泡排序"},
-		},
-		{
-			Name: "斐波那契数列",
-			Description: "**题目描述**\n" +
-				"```c\n" +
-				"#include <stdio.h>\n" +
-				"int fibonacci(int n) {\n" +
-				"    if (n <= 1) return n;\n" +
-				"    return fibonacci(n-1) + fibonacci(n-2);\n" +
-				"}\n" +
-				"int main() {\n" +
-				"    int n;\n" +
-				"    scanf(\"%d\", &n);\n" +
-				"    printf(\"%d\\n\", fibonacci(n));\n" +
-				"    return 0;\n" +
-				"}\n" +
-				"```",
-			Tags: []string{"数学", "递归"},
-		},
+	fileContent, err := os.ReadFile("data/1.toml")
+	if err != nil {
+		log.Fatalf("Failed to read TOML file: %v", err)
 	}
 
-	if err := db.Create(&problems).Error; err != nil {
-		log.Fatal("插入问题数据失败:", err)
+	// 修改数据结构定义
+	type TomlProblem struct {
+		Name        string   `toml:"name"`
+		Description string   `toml:"description"`
+		Tags        []string `toml:"tags"`
+		Test        []struct {
+			Input  string `toml:"input"`
+			Output string `toml:"output"`
+		} `toml:"test"`
 	}
-
-	testCases := []TestCase{
-		{
-			ProblemID: 1,
-			Cases: []Case{
-				{Input: "1 2", ExpectedOutput: "3"},
-				{Input: "3 5", ExpectedOutput: "8"},
-				{Input: "10 15", ExpectedOutput: "25"},
-			},
-		},
-		{
-			ProblemID: 2,
-			Cases: []Case{
-				{Input: "64 34 25 12 22 11 90", ExpectedOutput: "11 12 22 25 34 64 90"},
-				{Input: "5 1 4 2 8", ExpectedOutput: "1 2 4 5 8"},
-				{Input: "3 0 2 5 -1 4 1", ExpectedOutput: "-1 0 1 2 3 4 5"},
-			},
-		},
-		{
-			ProblemID: 3,
-			Cases: []Case{
-				{Input: "5", ExpectedOutput: "5"},
-				{Input: "10", ExpectedOutput: "55"},
-				{Input: "15", ExpectedOutput: "610"},
-			},
-		},
+	type TomlFile struct {
+		TomlProblems []TomlProblem `toml:"problem"`
 	}
+	var problems TomlFile
 
-	if err := db.Create(&testCases).Error; err != nil {
-		log.Fatal("插入测试用例数据失败:", err)
+	err = toml.Unmarshal(fileContent, &problems)
+	if err != nil {
+		log.Fatalf("Failed to parse TOML file: %v", err)
+	}
+	fmt.Println(problems.TomlProblems[0].Name)
+	for _, problem := range problems.TomlProblems {
+		var InsertProblem Problem
+		InsertProblem.Name = problem.Name
+		InsertProblem.Description = problem.Description
+		InsertProblem.Tags = problem.Tags
+		if err := db.Create(&InsertProblem).Error; err != nil {
+			log.Fatalf("Failed to insert problem: %v", err)
+		}
+		var InsertTestCase TestCase
+		InsertTestCase.ProblemID = InsertProblem.ID
+		for _, test := range problem.Test {
+			InsertTestCase.Cases = append(InsertTestCase.Cases, Case{
+				Input:          test.Input,
+				ExpectedOutput: test.Output,
+			})
+		}
+		if err := db.Create(&InsertTestCase).Error; err != nil {
+			log.Fatalf("Failed to insert test case: %v", err)
+		}
 	}
 }
