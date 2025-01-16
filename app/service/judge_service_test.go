@@ -84,6 +84,66 @@ func TestBasicC(t *testing.T) {
 		assert.True(t, result.IsSuccess, "测试用例 %d 未通过, 输入: %s, 预期: %s, 实际: %s", i+1, testCases[i].Input, testCases[i].ExpectedOutput, result.ActualOutput)
 	}
 }
+func BenchmarkBasicPy(b *testing.B) {
+	var JudgeServiceApp = new(JudgeService)
+
+	// 定义测试用例
+	testCases := []model.Case{
+		{
+			Input:          "1 2",
+			ExpectedOutput: "3",
+		},
+		{
+			Input:          "10 20",
+			ExpectedOutput: "30",
+		},
+		{
+			Input:          "-5 5",
+			ExpectedOutput: "0",
+		},
+	}
+	code := `
+	a, b = map(int, input().split())
+	print(a + b)
+	`
+	encodedCode := base64.StdEncoding.EncodeToString([]byte(code))
+	for i := 0; i < b.N; i++ {
+		_, err := JudgeServiceApp.EvaluateProblem("python", encodedCode, testCases)
+		assert.NoError(b, err)
+	}
+}
+func TestBasicPy(t *testing.T) {
+	var JudgeServiceApp = new(JudgeService)
+
+	// 定义测试用例
+	testCases := []model.Case{
+		{
+			Input:          "1 2",
+			ExpectedOutput: "3",
+		},
+		{
+			Input:          "10 20",
+			ExpectedOutput: "30",
+		},
+		{
+			Input:          "-5 5",
+			ExpectedOutput: "0",
+		},
+	}
+
+	// 测试的代码内容
+	codeContent := `
+a, b = map(int, input().split())
+print(a + b)
+`
+	codeContent = base64.StdEncoding.EncodeToString([]byte(codeContent))
+	evaluationResult, err := JudgeServiceApp.EvaluateProblem("python", codeContent, testCases)
+	assert.NoError(t, err)
+	assert.Equal(t, len(testCases), evaluationResult.Count)
+	for i, result := range evaluationResult.Results {
+		assert.True(t, result.IsSuccess, "测试用例 %d 未通过, 输入: %s, 预期: %s, 实际: %s", i+1, testCases[i].Input, testCases[i].ExpectedOutput, result.ActualOutput)
+	}
+}
 
 // 测试Py模块能够兼容未格式化的期望输出
 func TestBadlyFormattedExpectedOut(t *testing.T) {
