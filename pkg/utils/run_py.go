@@ -10,7 +10,7 @@ import (
 
 // 运行单一Python源代码文件
 func runPyCode(codeFile *os.File, input string) (string, error) {
-	cmd := exec.Command("python", codeFile.Name())
+	cmd := exec.Command("python3", codeFile.Name())
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdin = strings.NewReader(input)
