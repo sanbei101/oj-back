@@ -17,7 +17,7 @@ WORKDIR /app
 RUN apk add --no-cache gcc musl-dev python3
 
 COPY --from=builder /app/main .
-
+COPY ./data/* ./data/
 EXPOSE 3000
 
 CMD ["./main"]
