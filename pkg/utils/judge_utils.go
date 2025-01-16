@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/panjf2000/ants/v2"
@@ -13,7 +15,16 @@ var (
 	// 设置协程池的最大容量，可以根据您的服务器性能进行调整
 	maxPoolSize = 10
 	pool        *ants.PoolWithFunc
+	poolExec    *ants.PoolWithFunc
 )
+
+type runExecutableTask struct {
+	executablePath string
+	input          string
+	output         string
+	err            error
+	done           chan bool
+}
 
 type runCodeTask struct {
 	language    string
@@ -25,17 +36,34 @@ type runCodeTask struct {
 }
 
 func init() {
-	var err error
-	// 初始化一个带有返回值的协程池
-	pool, err = ants.NewPoolWithFunc(maxPoolSize, func(task interface{}) {
+	// 初始化带有返回值的协程池
+	pool, _ = ants.NewPoolWithFunc(maxPoolSize, func(task interface{}) {
 		t := task.(*runCodeTask)
 		// 执行任务
 		t.output, t.err = t.run()
 		t.done <- true
 	})
-	if err != nil {
-		panic(fmt.Sprintf("无法创建协程池: %v", err))
+	poolExec, _ = ants.NewPoolWithFunc(maxPoolSize, func(task interface{}) {
+		t := task.(*runExecutableTask)
+		// 执行任务
+		t.output, t.err = RunExecutable(t.executablePath, t.input)
+		t.done <- true
+	})
+}
+
+// RunExecutable 运行已编译的可执行文件并返回输出
+func RunExecutable(executablePath string, input string) (string, error) {
+	cmd := exec.Command(executablePath)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("运行时错误: %v, %s", err, stderr.String())
 	}
+
+	return stdout.String(), nil
 }
 
 func (t *runCodeTask) run() (string, error) {
@@ -49,7 +77,7 @@ func (t *runCodeTask) run() (string, error) {
 	}
 
 	// 将解码后的代码写入临时文件
-	codeFile, err := os.CreateTemp(".", "user_code_*.c")
+	codeFile, err := os.CreateTemp(".", "user_code_*.py")
 	if err != nil {
 		return "", fmt.Errorf("创建临时文件失败: %v", err)
 	}
@@ -66,8 +94,26 @@ func (t *runCodeTask) run() (string, error) {
 
 	return "", fmt.Errorf("不支持的语言")
 }
+func SubmitExecutableTask(executablePath string, input string) (string, error) {
+	task := &runExecutableTask{
+		executablePath: executablePath,
+		input:          input,
+		done:           make(chan bool),
+	}
 
-func RunCode(language string, codeContent string, input string) (string, error) {
+	// 将任务提交到协程池
+	err := poolExec.Invoke(task)
+	if err != nil {
+		return "", fmt.Errorf("无法提交任务到协程池: %v", err)
+	}
+
+	// 等待任务完成
+	<-task.done
+
+	return task.output, task.err
+}
+
+func SubmitCodeExecution(language string, codeContent string, input string) (string, error) {
 	task := &runCodeTask{
 		language:    language,
 		codeContent: codeContent,

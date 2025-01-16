@@ -44,3 +44,34 @@ func runCCode(codeFile *os.File, input string) (string, error) {
 
 	return stdout.String(), nil
 }
+
+// CompileCCode 编译C代码并返回可执行文件的路径
+func CompileCCode(codeContent []byte) (string, error) {
+	// 生成唯一的临时文件名
+	codeFile, err := os.CreateTemp("", "user_code_*.c")
+	if err != nil {
+		return "", fmt.Errorf("创建临时C文件失败: %v", err)
+	}
+	defer os.Remove(codeFile.Name())
+
+	// 写入C代码
+	if _, err := codeFile.Write([]byte(codeContent)); err != nil {
+		return "", fmt.Errorf("写入C代码失败: %v", err)
+	}
+	codeFile.Close()
+
+	// 生成可执行文件路径
+	executableName := fmt.Sprintf("c_out_%s", uuid.New().String())
+	executablePath := filepath.Join(os.TempDir(), executableName)
+	defer os.Remove(executablePath)
+
+	// 编译C代码
+	cmd := exec.Command("gcc", codeFile.Name(), "-o", executablePath)
+	var compileStderr bytes.Buffer
+	cmd.Stderr = &compileStderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("编译失败: %v, %s", err, compileStderr.String())
+	}
+
+	return executablePath, nil
+}
