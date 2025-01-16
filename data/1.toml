@@ -1,0 +1,113 @@
+#题目1
+[[problem]]
+name = "Hello World"
+description = """
+这是梦开始的地方
+请打印出 `Hello World`
+"""
+tags = ["字符串","简单"]
+[[problem.test]]
+input = ""
+output = "Hello World"
+
+
+#题目2
+[[problem]]
+name = "斐波纳契数列"
+description = """
+斐波纳契数列是一个非常经典的数列，它的定义如下：
+F(0) = 0
+F(1) = 1
+F(n) = F(n-1) + F(n-2) (n >= 2)
+示例代码如下
+```c
+#include <stdio.h>
+int fib(int n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    return fib(n-1) + fib(n-2);
+}
+int main() {
+    int n;
+    scanf("%d", &n);
+    printf("%d", fib(n));
+    return 0;
+}
+```
+```python
+def fib(n: int) -> int:
+    if n == 0: return 0
+    if n == 1: return 1
+    return fib(n-1) + fib(n-2)
+n = int(input())
+print(fib(n))
+```
+现在开启你的斐波纳契数列之旅吧！
+"""
+tags = ["数学", "递归", "动态规划"]
+[[problem.test]]
+input = "5"
+output = "5"
+[[problem.test]]
+input = "10"
+output = "55"
+
+
+
+#题目3
+[[problem]]
+name = "判断奇偶"
+description = """
+请编写一个程序，接受一个整数作为输入，并判断它是奇数还是偶数。
+如果输入是奇数，输出 `Odd`；如果是偶数，输出 `Even`。
+"""
+tags = ["条件判断", "简单"]
+[[problem.test]]
+input = "4"
+output = "Even"
+[[problem.test]]
+input = "7"
+output = "Odd"
+[[problem.test]]
+input = "0"
+output = "Even"
+
+[[problem]]
+name = "字符串长度"
+description = """
+请编写一个程序，接受一个字符串作为输入，并输出该字符串的长度。
+"""
+tags = ["字符串", "简单"]
+[[problem.test]]
+input = "Hello"
+output = "5"
+[[problem.test]]
+input = "你好，世界！"
+output = "7"
+[[problem.test]]
+input = ""
+output = "0"
+
+
+[[problem]]
+name = "闰年判断"
+description = """
+请编写一个程序，接受一个年份作为输入，并判断该年份是否是闰年。
+如果输入的年份是闰年，输出 `Leap Year`；否则，输出 `Not Leap Year`。
+闰年的判断规则：
+1. 年份能被4整除但不能被100整除，或者
+2. 年份能被400整除。
+"""
+tags = ["条件判断", "数学"]
+[[problem.test]]
+input = "2020"
+output = "Leap Year"
+[[problem.test]]
+input = "1900"
+output = "Not Leap Year"
+[[problem.test]]
+input = "2000"
+output = "Leap Year"
+[[problem.test]]
+input = "2019"
+output = "Not Leap Year"
