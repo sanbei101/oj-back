@@ -14,7 +14,7 @@ FROM alpine:3.21 AS runner
 WORKDIR /app
 
 # 安装 gcc 和其他必要的构建工具
-RUN apk add --no-cache gcc musl-dev
+RUN apk add --no-cache gcc musl-dev python3
 
 COPY --from=builder /app/main .
 
