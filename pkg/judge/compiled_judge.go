@@ -122,7 +122,7 @@ func (j *CompiledJudge) CompileCppCode(codeContent []byte) (string, error) {
 	executablePath := filepath.Join(os.TempDir(), executableName)
 
 	// 编译C++代码
-	cmd := exec.Command("g++", codeFile.Name(), "-o", executablePath)
+	cmd := exec.Command("g++", "-O3", codeFile.Name(), "-o", executablePath)
 	var compileStderr bytes.Buffer
 	cmd.Stderr = &compileStderr
 	if err := cmd.Run(); err != nil {

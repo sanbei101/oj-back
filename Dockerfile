@@ -17,7 +17,7 @@ FROM alpine:3.21 AS runner
 WORKDIR /app
 
 # 安装 gcc musl-dev(C语言必要工具) python3
-RUN apk add --no-cache gcc musl-dev python3
+RUN apk add --no-cache gcc musl-dev python3 g++
 
 COPY --from=builder /app/main .
 COPY ./data/* ./data/
