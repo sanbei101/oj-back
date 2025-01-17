@@ -77,6 +77,7 @@ func (j *CompiledJudge) CompileCCode(codeContent []byte) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("创建临时C文件失败: %v", err)
 	}
+	// 删除临时文件
 	defer os.Remove(codeFile.Name())
 
 	// 写入C代码
@@ -91,6 +92,37 @@ func (j *CompiledJudge) CompileCCode(codeContent []byte) (string, error) {
 
 	// 编译C代码
 	cmd := exec.Command("gcc", codeFile.Name(), "-o", executablePath)
+	var compileStderr bytes.Buffer
+	cmd.Stderr = &compileStderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("编译失败: %v, %s", err, compileStderr.String())
+	}
+
+	return executablePath, nil
+}
+
+// CompileCppCode 编译C++代码并返回可执行文件的路径
+func (j *CompiledJudge) CompileCppCode(codeContent []byte) (string, error) {
+	// 生成唯一的临时文件名
+	codeFile, err := os.CreateTemp("", "user_code_*.cpp")
+	if err != nil {
+		return "", fmt.Errorf("创建临时C++文件失败: %v", err)
+	}
+	// 删除临时文件
+	defer os.Remove(codeFile.Name())
+
+	// 写入C++代码
+	if _, err := codeFile.Write(codeContent); err != nil {
+		return "", fmt.Errorf("写入C++代码失败: %v", err)
+	}
+	codeFile.Close()
+
+	// 生成可执行文件路径
+	executableName := fmt.Sprintf("cpp_out_%s", uuid.New().String())
+	executablePath := filepath.Join(os.TempDir(), executableName)
+
+	// 编译C++代码
+	cmd := exec.Command("g++", codeFile.Name(), "-o", executablePath)
 	var compileStderr bytes.Buffer
 	cmd.Stderr = &compileStderr
 	if err := cmd.Run(); err != nil {

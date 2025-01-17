@@ -37,8 +37,16 @@ func (js *JudgeService) EvaluateProblem(language string, codeContent string, tes
 	}
 
 	// 针对编译型语言进行编译
+	var executablePath string
 	if compiledLanguages[language] {
-		executablePath, err := judge.CompiledJudgeApp.CompileCCode(decodedCode)
+		switch language {
+		case "c":
+			executablePath, err = judge.CompiledJudgeApp.CompileCCode(decodedCode)
+		case "cpp":
+			executablePath, err = judge.CompiledJudgeApp.CompileCppCode(decodedCode)
+		default:
+			return nil, fmt.Errorf("还不支持这个语言:%s", language)
+		}
 		// 完成之后删除可执行文件
 		defer os.Remove(executablePath)
 		if err != nil {
