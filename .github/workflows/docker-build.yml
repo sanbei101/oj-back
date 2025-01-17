@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker:
+  docker-build:
     runs-on: ubuntu-24.04
 
     steps:
@@ -18,12 +18,19 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    # 这个工具是高级版本的docker构建工具,可以利用缓存
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     # 构建并推送 Docker 镜像
     - name: Build and push
       uses: docker/build-push-action@v6
       with:
         push: true
         tags: sanbei/cau-oj-backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
         
     # 部署到我的服务器
     - name: deploy docker to remote server
