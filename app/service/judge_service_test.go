@@ -8,6 +8,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestTimeOut(t *testing.T) {
+	//超级巨大的计算导致的超时
+	var JudgeServiceApp = new(JudgeService)
+	codeContent := `
+	#include <stdio.h>
+	int fib(int n) {
+		if (n == 0) return 0;
+		if (n == 1) return 1;
+		return fib(n-1) + fib(n-2);
+	}
+	int main() {
+		int n;
+		scanf("%d", &n);
+		printf("%d", fib(n));
+		return 0;
+	}`
+	testCases := []model.Case{
+		{
+			Input:          "1000",
+			ExpectedOutput: "infinity",
+		},
+	}
+	codeContent = base64.StdEncoding.EncodeToString([]byte(codeContent))
+	evaluationResult, err := JudgeServiceApp.EvaluateProblem("c", codeContent, testCases)
+	assert.NoError(t, err)
+	assert.Contains(t, evaluationResult.Results[0].ActualOutput, "超时错误")
+}
 func BenchmarkBasicC(b *testing.B) {
 	var JudgeServiceApp = new(JudgeService)
 

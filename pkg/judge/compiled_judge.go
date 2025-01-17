@@ -2,11 +2,13 @@ package judge
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/panjf2000/ants/v2"
@@ -27,6 +29,7 @@ type CompiledJudgeTask struct {
 	output         string
 	err            error
 	done           chan bool
+	timeout        time.Duration
 }
 
 func init() {
@@ -40,24 +43,32 @@ func init() {
 
 // 运行已编译的可执行文件并返回输出
 func (t *CompiledJudgeTask) run() (string, error) {
-	cmd := exec.Command(t.executablePath)
+	// 创建带超时的上下文
+	ctx, cancel := context.WithTimeout(context.Background(), t.timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, t.executablePath)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdin = strings.NewReader(t.input)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
+	// 等待命令执行结果或者超时
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("超时错误: %v", err)
+		}
 		return "", fmt.Errorf("运行时错误: %v, %s", err, stderr.String())
 	}
 
 	return stdout.String(), nil
 }
-
 func (j *CompiledJudge) SubmitJudge(executablePath string, input string) (string, error) {
 	task := &CompiledJudgeTask{
 		executablePath: executablePath,
 		input:          input,
 		done:           make(chan bool),
+		timeout:        time.Second,
 	}
 
 	err := CompiledJudgePool.Invoke(task)
