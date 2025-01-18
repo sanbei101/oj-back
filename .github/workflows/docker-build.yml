@@ -11,12 +11,18 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-    # 登录到 Docker Hub
+    # 登录到 Docker Hub 和 华为云容器镜像仓库
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Login to HUAWEI Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: swr.cn-north-4.myhuaweicloud.com
+        username: ${{ secrets.HUAWEI_SWR_USERNAME }}
+        password: ${{ secrets.HUAWEI_SWR_TOKEN }}
 
     # 这个工具是高级版本的docker构建工具,可以利用缓存
     - name: Set up Docker Buildx
@@ -27,7 +33,9 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         push: true
-        tags: sanbei/cau-oj-backend:latest
+        tags: |
+          sanbei/cau-oj-backend:latest
+          swr.cn-north-4.myhuaweicloud.com/sanbei/cau-oj-backend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
