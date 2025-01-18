@@ -38,6 +38,7 @@ jobs:
           swr.cn-north-4.myhuaweicloud.com/sanbei/cau-oj-backend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        provenance: false
 
         
     # 部署到我的服务器
