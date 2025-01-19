@@ -49,7 +49,7 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         script: |
-          cd deploy
+          cd cau-oj-backend
           docker rm cau-oj-backend -f
-          docker rmi sanbei/cau-oj-backend -f
+          docker rmi swr.cn-north-4.myhuaweicloud.com/sanbei/cau-oj-backend -f
           docker compose up -d
